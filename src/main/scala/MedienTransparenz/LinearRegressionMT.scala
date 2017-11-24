@@ -1,10 +1,10 @@
 package MedienTransparenz
 
-import MedienTransparenz.QuarterSpendings.MediaDataRow
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.sql._
 import org.apache.log4j._
+import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
@@ -67,6 +67,9 @@ object LinearRegressionMT
     val model = algorithm.run(trainingData)
 
     trainingData foreach println
+
+
+
 
     /*
 
