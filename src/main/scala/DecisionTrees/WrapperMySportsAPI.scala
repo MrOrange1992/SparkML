@@ -5,7 +5,8 @@ import java.util.Base64
 
 import scala.io.Source
 
-class WrapperMySportsAPI
+
+class WrapperMySportsAPI extends Serializable
 {
   val basePath: String = "https://api.mysportsfeeds.com/v1.1/pull/nba/"
 
@@ -46,7 +47,47 @@ class WrapperMySportsAPI
     }
     catch { case e: Exception => e.printStackTrace(); List()}
   }
+
+  def mapper(line:String): Player =
+  {
+    // field: Birth City might contain a comma within quotation marks which should not be delimited
+    // https://stackoverflow.com/questions/1757065/java-splitting-a-comma-separated-string-but-ignoring-commas-in-quotes
+    val fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")
+
+    Player(
+      fields(1).toInt,      //Player ID
+      fields(2),            //Last name
+      fields(3),            //First name
+      fields(16),           //Team name
+      fields(5),            //Position
+      fields(6).replace("\"", "").replace("\'", ".").toFloat,   //Height in feet
+      fields(7).toInt,      //Height in pounds
+      fields(47).toFloat,   //Points per game
+      fields(45).toFloat,   //Assists per game
+      fields(43).toFloat,   //Rebounds per game
+      fields(32).toFloat,   //Field goal percentage
+      fields(37).toFloat,   //Free throw percentage
+      fields(61).toFloat)   //Minutes/Seconds played per game
+  }
+
 }
+
+case class Player(ID:Int,
+                  lastName:String,
+                  firstName: String,
+                  team: String,
+                  position: String,
+                  height: Float,
+                  weight: Int,
+                  pointsPG: Float,
+                  assistsPG: Float,
+                  reboundsPG: Float,
+                  fgPct: Float,
+                  ftPct: Float,
+                  minSecPG: Float)
+
+
+
 
 
 /*
@@ -113,6 +154,10 @@ class WrapperMySportsAPI
 52  #Blk
 53  #BlkPerGame
 
-Misc
-#BlkAgainst,#BlkAgainstPerGame,#FoulPers,#FoulPersPerGame,#PlusMinus,#PlusMinusPerGame,#MinSeconds,#MinSecondsPerGame,#Fouls,#FoulsPerGame,#FoulsDrawn,#FoulsDrawnPerGame,#FoulPersDrawn,#FoulPersDrawnPerGame,#FoulTech,#FoulTechPerGame,#FoulTechDrawn,#FoulTechDrawnPerGame,#FoulFlag1,#FoulFlag1PerGame,#FoulFlag1Drawn,#FoulFlag1DrawnPerGame,#FoulFlag2,#FoulFlag2PerGame,#FoulFlag2Drawn,#FoulFlag2DrawnPerGame,#Ejections
+#BlkAgainst,#BlkAgainstPerGame,#FoulPers,#FoulPersPerGame,#PlusMinus,#PlusMinusPerGame,
+
+60  #MinSeconds
+61  #MinSecondsPerGame
+
+#Fouls,#FoulsPerGame,#FoulsDrawn,#FoulsDrawnPerGame,#FoulPersDrawn,#FoulPersDrawnPerGame,#FoulTech,#FoulTechPerGame,#FoulTechDrawn,#FoulTechDrawnPerGame,#FoulFlag1,#FoulFlag1PerGame,#FoulFlag1Drawn,#FoulFlag1DrawnPerGame,#FoulFlag2,#FoulFlag2PerGame,#FoulFlag2Drawn,#FoulFlag2DrawnPerGame,#Ejections
 */
