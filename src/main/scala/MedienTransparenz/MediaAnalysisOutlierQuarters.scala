@@ -3,6 +3,7 @@ package MedienTransparenz
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.functions.round
 
 object MediaAnalysisOutlierQuarters
 {
@@ -11,7 +12,7 @@ object MediaAnalysisOutlierQuarters
     Logger.getLogger("org").setLevel(Level.ERROR)
 
     // Spark Context, using all Cores of local machine
-    val spark = SparkSession.builder.appName("MediaAnalysisLinearRegression").master("local[*]").getOrCreate()
+    val spark = SparkSession.builder.appName("MediaAnalysisOutlierQuarters").master("local[*]").getOrCreate()
 
 
     //Custom Schema for data frame to cast numeric fields
@@ -21,7 +22,7 @@ object MediaAnalysisOutlierQuarters
       StructField("BEKANNTGABE", IntegerType, true),
       StructField("LEERMELDUNG", IntegerType, true),
       StructField("MEDIUM_MEDIENINHABER", StringType, true),
-      StructField("EURO", FloatType, true)
+      StructField("EURO", DataTypes.createDecimalType(38,10), true)
     ))
 
     /*
@@ -39,9 +40,11 @@ object MediaAnalysisOutlierQuarters
     //data.printSchema()
     //data.show()
 
-    val quarterData = data.select(data("QUARTAL"), data("EURO")).groupBy(data("QUARTAL")).sum("EURO").orderBy("sum(EURO)")
+    val quarterData = data.select(data("QUARTAL"), data("EURO")).groupBy(data("QUARTAL")).sum("EURO").as("EURO").orderBy("QUARTAL")
 
-    quarterData.show()
+    val roundedData = quarterData.withColumn("sum(EURO)", round(quarterData("sum(EURO)"), 2))
+
+    roundedData.show()
 
   }
 
