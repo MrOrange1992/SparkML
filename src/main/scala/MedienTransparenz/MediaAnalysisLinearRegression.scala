@@ -62,7 +62,6 @@ object MediaAnalysisLinearRegression
     // prepare dataframe
     val dataLR = assembler.transform(mtDataDF).select("label", "features")
 
-
     // LINEAR REGRESSION
     val lr = new LinearRegression()
 
