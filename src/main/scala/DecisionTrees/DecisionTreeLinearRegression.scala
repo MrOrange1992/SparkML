@@ -1,14 +1,15 @@
 package DecisionTrees
 
 import org.apache.log4j._
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.udf
 
 
 object DecisionTreeLinearRegression
 {
-
 
   def main(args: Array[String]): Unit =
   {
@@ -18,25 +19,32 @@ object DecisionTreeLinearRegression
     val spark = SparkSession.builder.appName("DecisionTreeLinearRegression").master("local[*]").getOrCreate()
 
     /*
-      Currently Available
+      Currently Available (Nov 2017)
         2015-2016-regular
         2016-playoff
         2016-2017-regular
         2017-playoff
      */
     val apiWrapper = new WrapperMySportsAPI
-    val s2016PlayerStats = apiWrapper.getStatsOfSeason("2016-playoff")
+    val s2016PlayerStats = apiWrapper.getPlayerStatsOfSeason("2016-playoff")
 
     // Convert http-request-stream List[String] to a DataSet
     import spark.implicits._
     val lines = spark.sparkContext.parallelize(s2016PlayerStats.tail)   //tail because first line is csv header
 
-    val players = lines.map(apiWrapper.mapper).toDS().cache()
+    val players = lines.map(apiWrapper.mappPlayerStats).toDS().cache()
     //val players = lines.map(mapper).toDS()//.cache()
     //players.printSchema()
     //players.show()
 
-    //Player Lebron James
+    // summary of points per game of dataset
+    //players.describe("pointsPG").show()
+
+
+
+    //EXAMPLES
+    //------------------------------------------------------------------------------------------------------------------
+    //Player LeBron James
     //players.filter(players("lastName") === "James").show()
 
     //Team Cleveland Cavaliers
@@ -47,6 +55,7 @@ object DecisionTreeLinearRegression
 
     //Average stats by position
     //players.groupBy($"position").avg("pointsPG", "assistsPG", "reboundsPG").show()
+    //------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -63,31 +72,58 @@ object DecisionTreeLinearRegression
             features:   minSecPG, FtPct, FgPct
      */
 
+
     //points per game as label
-    val lrData = players.select($"pointsPG".as("label"), $"minSecPG", $"fgPct", $"ftPct")
+    val lrData = players.select($"pointsPG".as("label"), $"position", $"gamesPlayed", $"minSecPG", $"fgPct", $"ftPct")
 
     //setting up features
-    val assembler = new VectorAssembler().setInputCols(Array("minSecPG", "fgPct", "ftPct")).setOutputCol("features")
+    val assembler = new VectorAssembler().setInputCols(Array("position", "gamesPlayed", "minSecPG", "fgPct", "ftPct")).setOutputCol("features")
 
     //mapped dataset for Linear Regression
     val dataLR = assembler.transform(lrData).select("label", "features")
 
-    //Linear Regression
-    val lr = new LinearRegression()
-    val lrModel = lr.fit(dataLR)
+    //splitting data into training data and test data
+    val splitData = dataLR.randomSplit(Array(0.4, 0.6))
+    val trainingData = splitData(0)
+    val testData = splitData(1)
 
-    println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
+    //Linear Regression model
+    val lr = new LinearRegression()
+
+    //train the model
+    val lrModel = lr.fit(trainingData)
+
+
+    //summary / evaluation of trained model
+    //--------------------------------------------------
+    println(s"Coefficients: ${lrModel.coefficients} \nIntercept: ${lrModel.intercept}")
 
     val trainingSummary = lrModel.summary
 
-    println(s"numIterations: ${trainingSummary.totalIterations}")
-    println(s"objectiveHistory: ${trainingSummary.objectiveHistory.toList}")
+    //println(s"numIterations: ${trainingSummary.totalIterations}")
+    //println(s"objectiveHistory: ${trainingSummary.objectiveHistory.toList}")
 
-    trainingSummary.residuals.show()
+    //trainingSummary.residuals.show()
 
     println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
     println(s"MSE: ${trainingSummary.meanSquaredError}")
     println(s"r2: ${trainingSummary.r2}")
+    //--------------------------------------------------
+
+
+    //test the model
+    val predictions = lrModel.transform(testData)
+    //predictions.show()
+
+    //show residuals
+    predictions.select(($"label" - $"prediction").as("residuals")).show()
+
+    //calculate accuracy of predictions
+    val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
+    val accuracy = evaluator.evaluate(predictions)
+    println(s"Accuracy: $accuracy")
+
+
     //------------------------------------------------------------------------------------------------------------------
 
 
