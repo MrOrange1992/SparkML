@@ -1,2 +1,5 @@
 Person,Date,Hours,Description
 frau,24.11.2017,4h,"Implemented Linear Regression in DecionTrees NBA stats"
+frau,26.11.2017,6h,"Work on MT Analysis and DT"
+frau,24.11.2017,4h,"Created DataFrameMapper for MT, implemented groupby(org).groupby(media).sum(amount)"
+
