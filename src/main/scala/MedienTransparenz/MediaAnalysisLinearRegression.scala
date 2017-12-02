@@ -52,15 +52,15 @@ object MediaAnalysisLinearRegression
     //BAKANNTGABE:
       //4: Förderungen und Programmentgeld
       //2: Bekanntgabepflichtige Aufträge
-    val filteredData = data.filter(data("LEERMELDUNG") === "0").filter(data("BEKANNTGABE") =!= "4")
+    val filteredData = data.filter(data("LEERMELDUNG") === "0").filter(data("BEKANNTGABE") === "2")
+
+    //filteredData.show(5)//take(5).foreach(println)
+
+    //filteredData.describe().show()
 
     val quarterGroups = filteredData.groupBy("QUARTAL")
 
-    //Mittelwert für Ausgaben im Quartal gesamt
-    //quarterGroups.mean("EURO").sort("QUARTAL").show()
 
-    //Standardabweichung der Ausgaben pro Quartal
-    //filteredData.groupBy("QUARTAL").agg(stddev_pop("EURO")).sort("QUARTAL").show()//.describe().show()
 
 
     val countRT = filteredData.groupBy("RECHTSTRÄGER").count()
@@ -73,32 +73,15 @@ object MediaAnalysisLinearRegression
 
     //val groupedMedia = filteredData.groupBy("MEDIUM_MEDIENINHABER")
 
+    //filteredData.groupBy("RECHTSTRÄGER").
     val mediaRDD =  filteredData.rdd
 
-
-    // FRAGE
-    val mediaMap = mediaRDD.map( r => (r(0), List((r(4), r(5))))).reduceByKey((a, b) => a ++ b)//if (a.head._1 == b.head._1) a else a ++ b)
-
-
-    val pairs = mediaRDD.map(s => (s(0), 1))
+    //mediaRDD.groupBy()
 
 
 
-    //val mediaMap = pairs.reduceByKey((x,y) => x - y)
-
-
-
-    //pairs foreach println
-
-    //println(mediaMap.count())
-
-
-    //mediaRDD foreach println
-
-    type mediaMap = RDD[(String, List[(String, Float)])]
 
     /*
-
     // select desired fields and create label column in DS
     val mtDataDF = filteredData.select(data("QUARTAL").cast(FloatType).as("label"), data("EURO").cast(FloatType))
 
