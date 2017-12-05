@@ -7,7 +7,7 @@ import org.apache.spark.sql.types._
 class DataFrameMapper
 {
   //session instance for spark context
-  val sparkSession: SparkSession = SparkSession.builder.appName("MediaAnalysisLinearRegression").master("local[*]").getOrCreate()
+  val sparkSession: SparkSession = SparkSession.builder.appName("MediaTransparency").master("local[*]").getOrCreate()
 
   //Custom Schema for data frame to cast numeric fields
   val customSchema = StructType(
