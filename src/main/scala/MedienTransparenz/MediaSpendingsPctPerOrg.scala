@@ -3,7 +3,7 @@ package MedienTransparenz
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.functions._
 
-object MT_Demo
+object MediaSpendingsPctPerOrg
 {
   def main(args: Array[String]): Unit =
   {
@@ -34,11 +34,19 @@ object MT_Demo
     //mediaJoinedDF.show()
 
     //new column with calculated percentage of expenses from org for media
-    val mediaPctInOrgDF = mediaJoinedDF.withColumn("%", (mediaJoinedDF("sumMediaByOrg") / mediaJoinedDF("sumMediaTotal")) * 100)
-    mediaPctInOrgDF.orderBy(asc("media"), desc("%")).filter(mediaPctInOrgDF("%") >= 5).show(100)
+    val mediaPctInOrgDF =
+      mediaJoinedDF
+        .withColumn("%", (mediaJoinedDF("sumMediaByOrg") / mediaJoinedDF("sumMediaTotal")) * 100)
+        .withColumn("sumMediaByOrg", mediaJoinedDF("sumMediaByOrg"))
 
 
-
-
+    mediaPctInOrgDF
+      .orderBy(desc("sumMediaTotal"), asc("organisation"), desc("%"))
+      .withColumn("sumMediaTotal", format_number(mediaPctInOrgDF("sumMediaTotal"), 0))
+      .withColumn("sumMediaByOrg", format_number(mediaPctInOrgDF("sumMediaByOrg"), 0))
+      .withColumn("%", format_number(mediaPctInOrgDF("%"), 1))
+      .drop(mediaPctInOrgDF("federalState"))
+      .filter(mediaPctInOrgDF("%") >= 5)
+      .filter(mediaPctInOrgDF("sumMediaTotal") >= 50000).show(100, false)
   }
 }
