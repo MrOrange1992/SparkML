@@ -13,7 +13,7 @@ object MT_Demo
     //instance for mapper class for sparkSession
     val dataFrameMapper: DataFrameMapper = new DataFrameMapper
 
-    val dataFrame = dataFrameMapper.filterDF("31")
+    val dataFrame = dataFrameMapper.filterDF(true, true, false)
 
     //dataFrame.show()
 
@@ -22,20 +22,20 @@ object MT_Demo
     //dataFrame.groupBy("transferType").sum("amount").show()
 
     //sum amount for media for organisation over all quarters
-    val mediaInOrgDF = dataFrame.groupBy("organisation", "federalState", "media").sum("amount").withColumnRenamed("sum(amount)", "sumMediaByOrg")
+    val mediaSumInOrgDF = dataFrame.groupBy("organisation", "federalState", "media").sum("amount").withColumnRenamed("sum(amount)", "sumMediaByOrg")
     //mediaInOrgDF.orderBy(desc("sumMediaByOrg")).show()
 
     //total amounts for media
-    val mediaTotal = dataFrame.groupBy("media").sum("amount").withColumnRenamed("sum(amount)", "sumMediaTotal")
+    val mediaSumTotalDF = dataFrame.groupBy("media").sum("amount").withColumnRenamed("sum(amount)", "sumMediaTotal")
     //mediaTotal.orderBy(desc("sumMediaTotal")).show()
 
     //Table join to calculate percentage for media expenses
-    val joinedDF = mediaInOrgDF.join(mediaTotal, "media")
-    //joinedDF.show()
+    val mediaJoinedDF = mediaSumInOrgDF.join(mediaSumTotalDF, "media")
+    //mediaJoinedDF.show()
 
     //new column with calculated percentage of expenses from org for media
-    val calcDF = joinedDF.withColumn("%", (joinedDF("sumMediaByOrg") / joinedDF("sumMediaTotal")) * 100)
-    calcDF.orderBy(desc("sumMediaTotal"), desc("%")).filter(calcDF("%") >= 5).show(500)
+    val mediaPctInOrgDF = mediaJoinedDF.withColumn("%", (mediaJoinedDF("sumMediaByOrg") / mediaJoinedDF("sumMediaTotal")) * 100)
+    mediaPctInOrgDF.orderBy(asc("media"), desc("%")).filter(mediaPctInOrgDF("%") >= 5).show(100)
 
 
 

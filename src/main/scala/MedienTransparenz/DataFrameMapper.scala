@@ -31,17 +31,27 @@ class DataFrameMapper
     .cache()
 
 
-
   /**
     * get DataFrame filtered by transferType
     *
-    * 2   -> Zahlungen gemäß §2 MedKF-TG (Medien-Kooperationen)
-    * 4   -> Zahlungen gemäß §4 MedKF-TG (Förderungen)
-    * 31  -> Zahlungen gemäß §31 ORF-G (Gebühren)
-    *
-    * @param transferType type of transfers
-    * @return  filtered DataFrame
+    * @param mkp Zahlungen gemäß §2 MedKF-TG (Medien-Kooperationen)
+    * @param fdrg Zahlungen gemäß §4 MedKF-TG (Förderungen)
+    * @param gbrn Zahlungen gemäß §31 ORF-G (Gebühren)
+    * @return filtered DataFrame
     */
-  def filterDF(transferType: String): sql.DataFrame = dataFrame.filter(dataFrame("transferType") =!= transferType)
+  def filterDF(mkp: Boolean, fdrg: Boolean, gbrn: Boolean): sql.DataFrame =
+  {
+
+    if (mkp && fdrg && gbrn)
+      dataFrame
+    else if (mkp && fdrg && !gbrn)
+      dataFrame.filter(dataFrame("transferType") =!= "31")
+    else if (mkp && !fdrg && !gbrn)
+      dataFrame.filter(dataFrame("transferType") =!= "31").filter(dataFrame("transferType") =!= "4")
+    else if (!mkp && fdrg && !gbrn)
+      dataFrame.filter(dataFrame("transferType") =!= "31").filter(dataFrame("transferType") =!= "2")
+    else
+      dataFrame
+  }
 
 }

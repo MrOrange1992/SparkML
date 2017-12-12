@@ -113,10 +113,10 @@ object DecisionTreeLinearRegression
 
     //test the model
     val predictions = lrModel.transform(testData)
-    //predictions.show()
+    predictions.show()
 
     //show residuals
-    predictions.select(($"label" - $"prediction").as("residuals")).show()
+    //predictions.select(($"label" - $"prediction").as("residuals")).show()
 
     //calculate accuracy of predictions
     val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
