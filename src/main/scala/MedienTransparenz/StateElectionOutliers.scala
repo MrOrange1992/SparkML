@@ -1,11 +1,11 @@
 package MedienTransparenz
 
+
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
-import org.apache.spark.sql.functions.{asc, desc, format_number}
 import org.apache.spark.sql.functions.udf
+
 
 object StateElectionOutliers
 {
@@ -33,9 +33,11 @@ object StateElectionOutliers
     //mappedFrame.show()
 
 
+
     //LINEAR REGRESSION
     //------------------------------------------------------------------------------------------------------------------
     //points per game as label
+
 
     val mappedDF = mappedFrame.select(mappedFrame("amount").as("label"), mappedFrame("year"), mappedFrame("month"))
 
