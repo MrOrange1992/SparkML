@@ -49,4 +49,5 @@ object MediaSpendingsPctPerOrg
       .filter(mediaPctInOrgDF("%") >= 5)
       .filter(mediaPctInOrgDF("sumMediaTotal") >= 50000).show(100, false)
   }
+
 }

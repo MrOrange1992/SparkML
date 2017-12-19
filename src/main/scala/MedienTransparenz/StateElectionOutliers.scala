@@ -1,11 +1,15 @@
 package MedienTransparenz
 
 
+import breeze.linalg.split
+
+import scala.util.Random
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.functions.udf
 
+//http://MediaTransparency:4040
 
 object StateElectionOutliers
 {
@@ -25,6 +29,7 @@ object StateElectionOutliers
     def periodToMonth: (Int => Int) = p => p % 10
     val toYearUDF = udf(periodToYear)
     val toMonthUDF = udf(periodToMonth)
+
 
     val mappedFrame = filteredSTMK.select("period", "amount")
       .withColumn("year", toYearUDF(filteredSTMK("period")))
