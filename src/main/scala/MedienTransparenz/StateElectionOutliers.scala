@@ -11,6 +11,14 @@ import org.apache.spark.sql.functions.udf
 
 //http://MediaTransparency:4040
 
+
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.sql.functions.{asc, desc, format_number}
+import org.apache.spark.sql.functions.udf
+
 object StateElectionOutliers
 {
   def main(args: Array[String]): Unit =
@@ -30,7 +38,6 @@ object StateElectionOutliers
     val toYearUDF = udf(periodToYear)
     val toMonthUDF = udf(periodToMonth)
 
-
     val mappedFrame = filteredSTMK.select("period", "amount")
       .withColumn("year", toYearUDF(filteredSTMK("period")))
       .withColumn("month", toMonthUDF(filteredSTMK("period")))
@@ -38,11 +45,9 @@ object StateElectionOutliers
     //mappedFrame.show()
 
 
-
     //LINEAR REGRESSION
     //------------------------------------------------------------------------------------------------------------------
     //points per game as label
-
 
     val mappedDF = mappedFrame.select(mappedFrame("amount").as("label"), mappedFrame("year"), mappedFrame("month"))
 

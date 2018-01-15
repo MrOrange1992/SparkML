@@ -83,7 +83,8 @@ object DecisionTreeLinearRegression
     val dataLR = assembler.transform(lrData).select("label", "features")
 
     //splitting data into training data and test data
-    val splitData = dataLR.randomSplit(Array(0.7, 0.3))
+
+    val splitData = dataLR.randomSplit(Array(0.1, 0.9))
     val trainingData = splitData(0)
     val testData = splitData(1)
 

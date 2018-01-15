@@ -37,13 +37,30 @@ libraryDependencies ++= Seq(
   "org.mongodb.spark"      % "mongo-spark-connector_2.11" % sparkMongoVersion,
   "com.stratio.datasource" % "spark-mongodb_2.10"         % "0.11.1",
   "de.erichseifert.gral"   % "gral-core"                  % "0.11",
-  "org.knowm.xchart"      % "xchart"                      % "3.5.0" exclude("de.erichseifert.vectorgraphics2d", "VectorGraphics2D") withSources()
+  "org.knowm.xchart"      % "xchart"                      % "3.5.0" exclude("de.erichseifert.vectorgraphics2d", "VectorGraphics2D") withSources(),
   //"co.theasi"             %% "plotly"                     % "0.2.0"
 
   //  "com.101tec"           % "zkclient"         % "0.9",
+  "org.apache.spark"      %%  "spark-core"      %   sparkVersion  exclude("jline", "2.12"),
+  "org.apache.spark"      %% "spark-sql"        % sparkVersion excludeAll(ExclusionRule(organization = "jline"),ExclusionRule("name","2.12")),
+  "org.apache.spark"      %% "spark-hive"       % sparkVersion,
+  "org.apache.spark"      %% "spark-yarn"       % sparkVersion,
+  "com.databricks"        %% "spark-xml"        % sparkXMLVersion,
+  "com.databricks"        %% "spark-csv"        % sparkCsvVersion,
+  "org.apache.spark"      %% "spark-mllib"      % sparkVersion,
+  "org.apache.spark"      %% "spark-graphx"     % sparkVersion,
+  "org.apache.spark"      %% "spark-catalyst"   % sparkVersion,
+  "org.apache.spark"      %% "spark-streaming"  % sparkVersion,
+  //  "com.101tec"           % "zkclient"         % "0.9",
+  "org.elasticsearch"     %% "elasticsearch-spark"        %     sparkElasticVersion,
+  "org.apache.spark"      %% "spark-streaming-kafka"     % sscKafkaVersion,
+  "org.mongodb.spark"      % "mongo-spark-connector_2.11" %  sparkMongoVersion,
+  "com.stratio.datasource" % "spark-mongodb_2.10"         % "0.11.1"
+
   // Adding this directly as part of Build.sbt throws Guava Version incompatability issues.
   // Please look my Spark Cassandra Guava Shade Project and use that Jar directly.
   //"com.datastax.spark"     % "spark-cassandra-connector_2.11" % sparkCassandraVersion
 
 
 )
+

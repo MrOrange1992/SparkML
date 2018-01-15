@@ -21,5 +21,6 @@ org.scala-ide.sdt.update-site/site.xml`
 .DS_Store
 
 # Sports API credentials
+
 src/main/resources/sportsAPI.properties
 dataFiles/

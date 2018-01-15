@@ -7,7 +7,8 @@ import org.apache.spark.sql.types._
 class DataFrameMapper
 {
   //session instance for spark context
-  val sparkSession: SparkSession = SparkSession.builder.appName("MediaTransparency").master("spark://10.15.205.72:7077").getOrCreate()
+
+  val sparkSession: SparkSession = SparkSession.builder.appName("MediaTransparency").master("local[*]").getOrCreate()
 
   //Custom Schema for data frame to cast numeric fields
   val customSchema = StructType(
@@ -27,7 +28,7 @@ class DataFrameMapper
     .format("com.databricks.spark.csv")
     .option("header", "true")
     .schema(customSchema)
-    .load("./data/MT-20123-20172.csv")
+    .load("./dataFiles/MT-20123-20172.csv")
     .cache()
 
 
