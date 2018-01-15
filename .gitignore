@@ -22,4 +22,4 @@ org.scala-ide.sdt.update-site/site.xml`
 
 # Sports API credentials
 src/main/resources/sportsAPI.properties
-data/
+dataFiles/
