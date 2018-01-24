@@ -1,0 +1,22 @@
+clustering in medientrans zb tourismus
+ausgabeverhalten - politik (ministerien)
+feature vektor: sinnvoll redimensionieren
+diskrete werte, binäre variablen bei verspätung
+lineare reg bei flug + wetter
+	|_> verspätungsklassen
+
+
+dokumentation
+VERFAHREN + CODEsnippets
+BESCHREIBUNG DER EXPERIMENTE
+daten
+algo
+ergebnis
+qualität
+featureextraxtion
+datasanitation
+rational hinter entscheidungen
+
+
+
+THEORIE IN BSC!!!!

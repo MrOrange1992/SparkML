@@ -1,0 +1,32 @@
+flugnummer innerhalb carrier unique, aber immer gleicheflugstrecke -> GROUP BY
+	vektoren gewichung
+
+verspätungs treshold -> logistik -> ein binäres problem machen
+	decisiontree
+	
+split keine auswirkung
+
+wetter correlation
+	ausnahme der nicht wetter bedingten verspätungen
+	
+
+algorithmische techniken
+	statistiken
+	lin reg
+	decisiontree
+	
+	todo clustering algorithm
+	spark verfahren beleuchten
+	
+medien transparenz
+	klassifikationsproblem: in welche klasse fällt eine landesregierung oder ministerium -> label taggen: label vorhersage
+	FEATURE VEKTOR
+	Datenaufbereitung -> Datentransformation
+	
+	
+KOEFFIZIENTEN GEWICHTUNG
+
+Zeiten berechnung - Minuten seit Mitternacht auch mehr als Mitternacht
+
+Support Vector Machnine
+K Nearest Neighbours

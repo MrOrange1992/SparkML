@@ -1,0 +1,3 @@
+Binäres Vorhersagemodel: Logistic Regression
+
+Normalisierung der abhängigen Parameter

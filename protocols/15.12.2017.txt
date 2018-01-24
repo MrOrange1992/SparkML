@@ -1,0 +1,23 @@
+media percentage
+	clustering algorithmus
+		politische ausrichtung der rt
+		bundesland in welcher farbe => ministerien
+		=> Proof of concept - kann man sowas überhaupt algorithmisch lösen?
+		80/20 vorhersage treffen (training/prediction)
+	beschreibende statistik
+		politischer einfluss (in summe auf medium)
+
+flugdatensatz (echtes big data)
+	vorhersage model - wie ws ist verspätung
+	wovon hängt es ab
+
+jupyter nb scala graphic
+
+wahlen
+	oberöstereichwahl
+	nicht binär ereignis (kurve 0,1,2,-1,0)
+	
+
+
+
+	
