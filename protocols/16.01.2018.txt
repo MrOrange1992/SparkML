@@ -1,9 +1,9 @@
 clustering in medientrans zb tourismus
 ausgabeverhalten - politik (ministerien)
 feature vektor: sinnvoll redimensionieren
-diskrete werte, bin‰re variablen bei versp‰tung
+diskrete werte, bin√§re variablen bei versp√§tung
 lineare reg bei flug + wetter
-	|_> versp‰tungsklassen
+	|_> versp√§tungsklassen
 
 
 dokumentation
@@ -12,7 +12,7 @@ BESCHREIBUNG DER EXPERIMENTE
 daten
 algo
 ergebnis
-qualit‰t
+qualit√§t
 featureextraxtion
 datasanitation
 rational hinter entscheidungen
