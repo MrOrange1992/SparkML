@@ -4,6 +4,7 @@ import org.apache.log4j._
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.mllib.regression.LinearRegressionWithSGD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.udf
 

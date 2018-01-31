@@ -7,6 +7,7 @@ import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.sql.functions.udf
+import org.apache.spark.ml.regression.DecisionTreeRegressionModel
 
 
 object FlightDecisionTree
@@ -113,7 +114,7 @@ object FlightDecisionTree
     val numClasses = 2
     val categoricalFeaturesInfo = Map[Int, Int]()
     val impurity = "gini"
-    val maxDepth = 5
+    val maxDepth = 2
     val maxBins = 32
 
     val model = DecisionTree.trainClassifier(trainingData, numClasses, categoricalFeaturesInfo,
