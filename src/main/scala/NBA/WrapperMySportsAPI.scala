@@ -1,4 +1,4 @@
-package DecisionTrees
+package NBA
 
 import java.net.{HttpURLConnection, URL}
 import java.util.Base64
@@ -94,13 +94,17 @@ class WrapperMySportsAPI extends Serializable
     * @param line       data line from API csv file
     * @return           Player instance
     */
-  def mappPlayerStats(line:String): Player =
+  def mappPlayerStats(line:String): Option[Player] =
   {
     // field: Birth City might contain a comma within quotation marks which should not be delimited
     // https://stackoverflow.com/questions/1757065/java-splitting-a-comma-separated-string-but-ignoring-commas-in-quotes
     val fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")
 
-    Player(
+    if (fields(6).equals(""))
+      None
+    else
+
+    Some(Player(
       fields(1).toInt,      //Player ID
       fields(2),            //Last name
       fields(3),            //First name
@@ -118,6 +122,7 @@ class WrapperMySportsAPI extends Serializable
       fields(22).toFloat,   //Free throw percentage
       fields(18).toFloat,   //Minutes/Seconds played per game
       fields(17).toInt)     //Games Played
+    )
   }
 
   /***

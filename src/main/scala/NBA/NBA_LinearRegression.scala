@@ -1,4 +1,4 @@
-package DecisionTrees
+package NBA
 
 import org.apache.log4j._
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
@@ -7,9 +7,14 @@ import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.udf
+import co.theasi.plotly
+import co.theasi.plotly.{Plot, writer}
+import co.theasi.plotly._
 
 
-object DecisionTreeLinearRegression
+
+
+object NBA_LinearRegression
 {
 
   def main(args: Array[String]): Unit =
@@ -17,7 +22,7 @@ object DecisionTreeLinearRegression
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
     // Use new SparkSession interface in Spark 2.0
-    val spark = SparkSession.builder.appName("DecisionTreeLinearRegression").master("local[*]").getOrCreate()
+    val spark = SparkSession.builder.appName("NBA_LinearRegression").master("local[*]").getOrCreate()
 
     /*
       Currently Available (Nov 2017)
@@ -27,15 +32,13 @@ object DecisionTreeLinearRegression
         2017-playoff
      */
     val apiWrapper = new WrapperMySportsAPI
-    val s2016PlayerStats = apiWrapper.getPlayerStatsOfSeason("2016-playoff")
+    val s2016PlayerStats = apiWrapper.getPlayerStatsOfSeason("2016-2017-regular")
 
     // Convert http-request-stream List[String] to a DataSet
     import spark.implicits._
     val lines = spark.sparkContext.parallelize(s2016PlayerStats.tail)   //tail because first line is csv header
 
-    val players = lines.map(apiWrapper.mappPlayerStats).toDS().cache()
-    //val players = lines.map(mapper).toDS()//.cache()
-    //players.printSchema()
+    val players = lines.flatMap(apiWrapper.mappPlayerStats).toDS().cache()
     //players.show()
 
     // summary of points per game of dataset
@@ -75,17 +78,17 @@ object DecisionTreeLinearRegression
 
 
     //points per game as label
-    val lrData = players.select($"pointsPG".as("label"), $"position", $"gamesPlayed", $"minSecPG", $"fgPct", $"ftPct")
+    val lrData = players.select($"pointsPG".as("label"), $"position", $"height", $"weight", $"gamesPlayed", $"minSecPG", $"fgPct", $"ftPct")
 
     //setting up features
-    val assembler = new VectorAssembler().setInputCols(Array("position", "gamesPlayed", "minSecPG", "fgPct", "ftPct")).setOutputCol("features")
+    val assembler = new VectorAssembler().setInputCols(Array("position", "height", "weight", "gamesPlayed", "minSecPG", "fgPct", "ftPct")).setOutputCol("features")
 
     //mapped dataset for Linear Regression
     val dataLR = assembler.transform(lrData).select("label", "features")
 
     //splitting data into training data and test data
 
-    val splitData = dataLR.randomSplit(Array(0.1, 0.9))
+    val splitData = dataLR.randomSplit(Array(0.5, 0.5))
     val trainingData = splitData(0)
     val testData = splitData(1)
 
@@ -115,15 +118,53 @@ object DecisionTreeLinearRegression
 
     //test the model
     val predictions = lrModel.transform(testData)
-    predictions.show()
+    //predictions.show()
 
     //show residuals
-    //predictions.select(($"label" - $"prediction").as("residuals")).show()
+    predictions.select(($"label" - $"prediction").as("residuals")).show()
 
     //calculate accuracy of predictions
     val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
     val accuracy = evaluator.evaluate(predictions)
     println(s"Accuracy: $accuracy")
+    //------------------------------------------------------------------------------------------------------------------
+
+
+
+
+    //PLOTLY
+    //------------------------------------------------------------------------------------------------------------------
+
+    val plotData = predictions.sort("label")
+
+    plotData.describe().show()
+
+    val xs = 0 until 300
+
+
+    implicit val y1: Array[Double] = plotData.select($"label").rdd.map(_(0).toString.toDouble).collect()
+    implicit val y2: Array[Double] = plotData.select($"prediction").rdd.map(_(0).toString.toDouble).collect()
+
+
+
+    // Options common to traces
+    val commonOptions = ScatterOptions().mode(ScatterMode.Marker).marker(MarkerOptions().size(8).lineWidth(1))
+
+
+    // The plot itself
+    val plot = Plot()
+      .withScatter(xs, y1, commonOptions.name("Label"))
+      .withScatter(xs, y2, commonOptions.name("Prediction"))
+
+
+
+    draw(plot, "NBA_LR_16-17_50-50_All", writer.FileOptions(overwrite=true))
+
+
+
+
+
+
 
 
     //------------------------------------------------------------------------------------------------------------------
