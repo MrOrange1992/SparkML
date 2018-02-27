@@ -1,0 +1,140 @@
+Model:
+    import org.apache.spark.mllib.tree.DecisionTree
+
+
+
+val splits = dtData.randomSplit(Array(0.5, 0.5))
+val (trainingData, testData) = (splits(0), splits(1))
+
+// Train a DecisionTree model.
+//  Empty categoricalFeaturesInfo indicates all features are continuous.
+val numClasses = 2
+val categoricalFeaturesInfo = Map[Int, Int]()
+val impurity = "gini"
+val maxDepth = 5
+val maxBins = 32
+
+val model = DecisionTree.trainClassifier(trainingData, numClasses, categoricalFeaturesInfo,
+  impurity, maxDepth, maxBins)
+
+
+
+Features:
+    "MONTH",
+    "DAY_OF_MONTH",
+    "DAY_OF_WEEK",
+    "AIRLINE_ID",
+    "ORIGIN_AIRPORT_ID",
+    "DEST_AIRPORT_ID",
+    "CRS_DEP_TIME",
+    "DISTANCE_GROUP",
+    "PRCP",
+    "SNOW",
+    "SNWD",
+    "TAVG",
+    "TMAX",
+    "TMIN",
+    "WESF"
+
+
+Total: 101289826
+Zero count: 79984843
+Correct predictions: 80063575
+Percentage: 79.044044
+
+Learned classification tree model:
+DecisionTreeModel classifier of depth 5 with 63 nodes
+  If (feature 6 <= 8.0)
+   If (feature 6 <= 7.0)
+    If (feature 6 <= 1.0)
+     If (feature 3 <= 19977.0)
+      If (feature 4 <= 14771.0)
+       Predict: 0.0
+      Else (feature 4 > 14771.0)
+       Predict: 1.0
+     Else (feature 3 > 19977.0)
+      If (feature 1 <= 11.0)
+       Predict: 0.0
+      Else (feature 1 > 11.0)
+       Predict: 0.0
+    Else (feature 6 > 1.0)
+     If (feature 3 <= 19930.0)
+      If (feature 6 <= 6.0)
+       Predict: 0.0
+      Else (feature 6 > 6.0)
+       Predict: 0.0
+     Else (feature 3 > 19930.0)
+      If (feature 1 <= 19.0)
+       Predict: 0.0
+      Else (feature 1 > 19.0)
+       Predict: 0.0
+   Else (feature 6 > 7.0)
+    If (feature 3 <= 19977.0)
+     If (feature 1 <= 18.0)
+      If (feature 3 <= 19930.0)
+       Predict: 0.0
+      Else (feature 3 > 19930.0)
+       Predict: 0.0
+     Else (feature 1 > 18.0)
+      If (feature 7 <= 10.0)
+       Predict: 0.0
+      Else (feature 7 > 10.0)
+       Predict: 0.0
+    Else (feature 3 > 19977.0)
+     If (feature 5 <= 14747.0)
+      If (feature 1 <= 18.0)
+       Predict: 0.0
+      Else (feature 1 > 18.0)
+       Predict: 0.0
+     Else (feature 5 > 14747.0)
+      If (feature 1 <= 24.0)
+       Predict: 0.0
+      Else (feature 1 > 24.0)
+       Predict: 0.0
+  Else (feature 6 > 8.0)
+   If (feature 1 <= 10.0)
+    If (feature 0 <= 1.0)
+     If (feature 1 <= 1.0)
+      If (feature 4 <= 13796.0)
+       Predict: 0.0
+      Else (feature 4 > 13796.0)
+       Predict: 0.0
+     Else (feature 1 > 1.0)
+      If (feature 6 <= 10.0)
+       Predict: 0.0
+      Else (feature 6 > 10.0)
+       Predict: 0.0
+    Else (feature 0 > 1.0)
+     If (feature 2 <= 1.0)
+      If (feature 4 <= 12892.0)
+       Predict: 1.0
+      Else (feature 4 > 12892.0)
+       Predict: 0.0
+     Else (feature 2 > 1.0)
+      If (feature 4 <= 12892.0)
+       Predict: 0.0
+      Else (feature 4 > 12892.0)
+       Predict: 0.0
+   Else (feature 1 > 10.0)
+    If (feature 8 <= 1.7999999523162842)
+     If (feature 1 <= 24.0)
+      If (feature 1 <= 19.0)
+       Predict: 0.0
+      Else (feature 1 > 19.0)
+       Predict: 0.0
+     Else (feature 1 > 24.0)
+      If (feature 0 <= 1.0)
+       Predict: 0.0
+      Else (feature 0 > 1.0)
+       Predict: 0.0
+    Else (feature 8 > 1.7999999523162842)
+     If (feature 0 <= 2.0)
+      If (feature 1 <= 23.0)
+       Predict: 0.0
+      Else (feature 1 > 23.0)
+       Predict: 0.0
+     Else (feature 0 > 2.0)
+      If (feature 2 <= 3.0)
+       Predict: 0.0
+      Else (feature 2 > 3.0)
+       Predict: 0.0

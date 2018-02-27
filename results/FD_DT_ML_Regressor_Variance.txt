@@ -1,0 +1,124 @@
+
+Model:
+    import org.apache.spark.ml.regression.{DecisionTreeRegressionModel, DecisionTreeRegressor}
+
+
+// Split the data into training and test sets (30% held out for testing).
+val Array(trainingData, testData) = convertLabel.randomSplit(Array(0.7, 0.3))
+
+// Train a DecisionTree model.
+val dt = new DecisionTreeRegressor()
+  .setLabelCol("label")
+  .setFeaturesCol("features")
+  .setMaxDepth(3)
+  .setMaxBins(50)
+
+
+Features:
+    "MONTH",
+    "DAY_OF_MONTH",
+    "DAY_OF_WEEK",
+    "AIRLINE_ID",
+    "ORIGIN_AIRPORT_ID",
+    "DEST_AIRPORT_ID",
+    "CRS_DEP_TIME",
+    "DISTANCE_GROUP"
+
+
+//CODE
+/*   ML DecisionTreeRegressor Variant
+    // Automatically identify categorical features, and index them.
+    // Here, we treat features with > 4 distinct values as continuous.
+    val vectorAssembler = new VectorAssembler()
+      .setInputCols(Array(
+        "MONTH",
+        "DAY_OF_MONTH",
+        "DAY_OF_WEEK",
+        "AIRLINE_ID",
+        "ORIGIN_AIRPORT_ID",
+        "DEST_AIRPORT_ID",
+        "CRS_DEP_TIME",
+        "DISTANCE_GROUP"
+      ))
+      .setOutputCol("features")
+      //.setMaxCategories(4)
+      //.fit(convertLabel)
+
+    // Split the data into training and test sets (30% held out for testing).
+    val Array(trainingData, testData) = convertLabel.randomSplit(Array(0.7, 0.3))
+
+    // Train a DecisionTree model.
+    val dt = new DecisionTreeRegressor()
+      .setLabelCol("label")
+      .setFeaturesCol("features")
+      .setMaxDepth(3)
+      .setMaxBins(50)
+
+    // Chain indexer and tree in a Pipeline.
+    val pipeline = new Pipeline()
+      .setStages(Array(vectorAssembler, dt))
+
+    // Train model. This also runs the indexer.
+    val model = pipeline.fit(trainingData)
+
+    // Make predictions.
+    val predictions = model.transform(testData)
+
+    // Select example rows to display.
+    predictions.select("prediction", "label", "features").cache()//.show(20)
+
+    // Select (prediction, true label) and compute test error.
+    val evaluator = new RegressionEvaluator()
+      .setLabelCol("label")
+      .setPredictionCol("prediction")
+      .setMetricName("rmse")
+    val rmse = evaluator.evaluate(predictions)
+    println("Root Mean Squared Error (RMSE) on test data = " + rmse)
+
+    val treeModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
+    println("Learned regression tree model:\n" + treeModel.toDebugString)
+
+    predictions.describe().show()
+
+    println("DEBUG")
+*/
+
+
+
+Output:
+
+Root Mean Squared Error (RMSE) on test data = 0.33973782176467215
+Learned regression tree model:
+DecisionTreeRegressionModel (uid=dtr_b90d77c88a6c) of depth 3 with 15 nodes
+  If (feature 6 <= 9.0)
+   If (feature 6 <= 7.0)
+    If (feature 3 <= 19930.0)
+     Predict: 0.030959473012557626
+    Else (feature 3 > 19930.0)
+     Predict: 0.0609703946983505
+   Else (feature 6 > 7.0)
+    If (feature 3 <= 19977.0)
+     Predict: 0.07945475742085911
+    Else (feature 3 > 19977.0)
+     Predict: 0.1315783950617284
+  Else (feature 6 > 9.0)
+   If (feature 1 <= 10.0)
+    If (feature 0 <= 1.0)
+     Predict: 0.3324476585454139
+    Else (feature 0 > 1.0)
+     Predict: 0.19953465878877266
+   Else (feature 1 > 10.0)
+    If (feature 1 <= 24.0)
+     Predict: 0.15932220056859678
+    Else (feature 1 > 24.0)
+     Predict: 0.08568848080453509
+
++-------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+-------------------+--------------------+
+|summary|             MONTH|      DAY_OF_MONTH|       DAY_OF_WEEK|        AIRLINE_ID| ORIGIN_AIRPORT_ID|   DEST_AIRPORT_ID|      CRS_DEP_TIME|         DEP_DELAY|    DISTANCE_GROUP|              label|          prediction|
++-------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+-------------------+--------------------+
+|  count|          60776419|          60776419|          60776419|          60776419|          60776419|          60776419|          60776419|          60776419|          60776419|           60776419|            60776419|
+|   mean|2.0068459117342865|15.522101705268287|3.8816478641165086|19906.073383000734|13898.100168685489|13226.281215252251|12.888743988026015|13.974055908098173|  4.42973380843646|0.14126840872279758|  0.1412101013831816|
+| stddev|0.8314758506646177| 8.713305824179747|1.9778398432743274|463.14808601233227| 1074.159426754832|1444.4720839341467| 5.005056059537339|43.714031620024805|3.1508054502817178|0.34829821621098456| 0.07674887361054436|
+|    min|                 1|                 1|                 1|             19393|             10157|             10140|                 0|             -32.0|                 1|                  0|0.030959473012557626|
+|    max|                 3|                31|                 7|             21171|             15023|             15919|                23|            1440.0|                11|                  1|  0.3324476585454139|
++-------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+-------------------+--------------------+

@@ -1,0 +1,4 @@
+split amount training / test data -> huge difference -> because small dataset
+
+funny -> maxdepth(3) better results than maxdepth(5) -> ca.1.7 std error to ca.2.3
+
