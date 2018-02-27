@@ -1,14 +1,13 @@
 package FlightAnalysis
 
-import breeze.numerics.abs
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
-import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.functions._
 
-object FlightLogisticRegression
+
+object FD_LinReg_ML
 {
   def main(args: Array[String]): Unit =
   {
@@ -18,61 +17,33 @@ object FlightLogisticRegression
     //instance for mapper class for sparkSession
     val dataFrameMapper: FlightDataMapper = new FlightDataMapper
 
-    val mapperFrame = dataFrameMapper.mappedFrameNoCancelled
+    val dataFrame = dataFrameMapper.mappedFrameNoCancelled
 
-    val newFrame = mapperFrame.filter(mapperFrame("ORIGIN_STATE_ABR") === "CA")
+    val expandedFrame = dataFrame//.withColumn("SUM_DELAY", dataFrame("DEP_DELAY") + dataFrame("ARR_DELAY"))
 
-    val renamedFrame = newFrame.withColumnRenamed("FL_DATE", "DATE")
-
-
-    val weatherFrame = dataFrameMapper.weatherFrame
-
-    val joinedFrame = renamedFrame.join(weatherFrame, "DATE")
-
-
-    def num2bolNum: (Float => Int) = v => { if (v > 35) 1 else 0 }
-
-    val bool2int_udf = udf(num2bolNum)
-
-    val dataFrame = joinedFrame.withColumn("IS_DELAYED", bool2int_udf(joinedFrame("DEP_DELAY"))).na.fill(0)
-
-    //dataFrame.rdd.map(row => row.map)
+    //dataFrame.show()
 
 
     //points per game as label
-    val lrData = dataFrame
+    val lrData = expandedFrame
       .select(
-        dataFrame("IS_DELAYED").as("label"),
+        expandedFrame("DEP_DELAY").as("label"),
         //expandedFrame("YEAR"),
         //expandedFrame("QUARTER"),
         //expandedFrame("MONTH"),
-        dataFrame("DAY_OF_MONTH"),
-        dataFrame("DAY_OF_WEEK"),
-        dataFrame("AIRLINE_ID"),
-        dataFrame("ORIGIN_AIRPORT_ID"),
-        dataFrame("DEST_AIRPORT_ID"),
-        dataFrame("CRS_DEP_TIME"),
-        dataFrame("DISTANCE_GROUP"),
-        dataFrame("PRCP"),
-        dataFrame("SNOW"),
-        dataFrame("SNWD"),
-        dataFrame("TAVG"),
-        dataFrame("TMAX"),
-        dataFrame("TMIN"),
-        dataFrame("WESF"),
-        dataFrame("WT01"),
-        dataFrame("WT02"),
-        dataFrame("WT03"),
-        dataFrame("WT04"),
-        dataFrame("WT05"),
-        dataFrame("WT06"),
-        dataFrame("WT07"),
-        dataFrame("WT08"),
-        dataFrame("WT11")
-      )
+        expandedFrame("DAY_OF_MONTH"),
+        expandedFrame("DAY_OF_WEEK"),
+        expandedFrame("AIRLINE_ID"),
+        expandedFrame("ORIGIN_AIRPORT_ID"),
+        expandedFrame("DEST_AIRPORT_ID"),
+        expandedFrame("CRS_DEP_TIME"),
+        expandedFrame("DEP_DELAY_NEW"),
+        expandedFrame("CRS_ARR_TIME"),
+        expandedFrame("DISTANCE_GROUP"))
 
+    lrData.groupBy(lrData("DEST_AIRPORT_ID")).count().describe().show()
 
-
+    //lrData.describe().show()
 
     //setting up features
     val assembler = new VectorAssembler()
@@ -86,25 +57,10 @@ object FlightLogisticRegression
         "ORIGIN_AIRPORT_ID",
         "DEST_AIRPORT_ID",
         "CRS_DEP_TIME",
-        "DISTANCE_GROUP",
-        "PRCP",
-        "SNOW",
-        "SNWD",
-        "TAVG",
-        "TMAX",
-        "TMIN",
-        "WESF",
-        "WT01",
-        "WT02",
-        "WT03",
-        "WT04",
-        "WT05",
-        "WT06",
-        "WT07",
-        "WT08",
-        "WT11"
+        "DEP_DELAY_NEW",
+        "CRS_ARR_TIME",
+        "DISTANCE_GROUP"
       )).setOutputCol("features")
-
 
 
 
@@ -120,7 +76,7 @@ object FlightLogisticRegression
     trainingData.show()
 
     //Linear Regression model
-    val lr = new LogisticRegression()
+    val lr = new LinearRegression()
 
     //train the model
     val lrModel = lr.fit(trainingData)
@@ -137,9 +93,9 @@ object FlightLogisticRegression
 
     //trainingSummary.residuals.show()
 
-    //println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
-    //println(s"MSE: ${trainingSummary.meanSquaredError}")
-    //println(s"r2: ${trainingSummary.r2}\n")
+    println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
+    println(s"MSE: ${trainingSummary.meanSquaredError}")
+    println(s"r2: ${trainingSummary.r2}\n")
     //--------------------------------------------------
 
 
@@ -155,8 +111,7 @@ object FlightLogisticRegression
     val accuracy = evaluator.evaluate(predictions)
     println(s"Accuracy: $accuracy")
 
-
+    //------------------------------------------------------------------------------------------------------------------
 
   }
-
 }

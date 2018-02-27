@@ -13,7 +13,7 @@ import org.apache.spark.sql.SparkSession
 
 import scala.math.round
 
-object NBA_DecisionTree
+object NBA_DT_Mllib_Reg_Variance
 {
   def main(args: Array[String]): Unit =
   {
@@ -85,6 +85,7 @@ object NBA_DecisionTree
     labelAndPreds.toDS().show()
 
 
+    /*
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
@@ -112,7 +113,7 @@ object NBA_DecisionTree
 
 
     draw(plot, "NBA_DT_16-17_50-50_All", writer.FileOptions(overwrite=true))
-
+    */
 
     //stop session
     spark.stop()

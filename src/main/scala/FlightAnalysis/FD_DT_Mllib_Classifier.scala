@@ -1,17 +1,16 @@
 package FlightAnalysis
 
-import breeze.numerics.abs
-import co.theasi.plotly.{MarkerOptions, Plot, ScatterMode, ScatterOptions, draw, writer}
+
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.feature.{PCA, VectorAssembler}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.sql.functions.udf
-import org.apache.spark.ml.regression.DecisionTreeRegressionModel
 
 
-object FlightDecisionTree
+
+
+object FD_DT_Mllib_Classifier
 {
 
   def main(args: Array[String]): Unit =
@@ -44,8 +43,8 @@ object FlightDecisionTree
       "DEST_AIRPORT_ID",
       "CRS_DEP_TIME",
       "DEP_DELAY",
-      "DISTANCE_GROUP"
-      /*"PRCP",
+      "DISTANCE_GROUP",
+      "PRCP",
       "SNOW",
       "SNWD",
       "TAVG",
@@ -60,20 +59,23 @@ object FlightDecisionTree
       "WT06",
       "WT07",
       "WT08",
-      "WT11"*/
+      "WT11"
     )
 
 
     //TODO: delay > 30min/40min
-    def num2bolNum: (Float => Int) = v => { if (v > 35) 1 else 0 }
+    def num2bolNum: (Float => Int) = v => { if (v > 20) 1 else 0 }
 
     val bool2int_udf = udf(num2bolNum)
 
-    val convertLabel = finishedFrame.withColumn("IS_DELAYED", bool2int_udf(dataFrame("DEP_DELAY")))
+    val convertLabel = finishedFrame
+      .withColumn("IS_DELAYED", bool2int_udf(dataFrame("DEP_DELAY")))
 
+
+    //converting to RDD for mllib model
     val expandedFrame = convertLabel.rdd //.withColumn("SUM_DELAY", dataFrame("DEP_DELAY") + dataFrame("ARR_DELAY"))
 
-
+    //mapping to LabeledPoint for label / feature Vector
     val dtData = expandedFrame.map(row => LabeledPoint(
       row.getAs[Int]("IS_DELAYED"), // Get target value
       // Map feature indices to values
@@ -85,28 +87,28 @@ object FlightDecisionTree
         row.getAs[Int]("ORIGIN_AIRPORT_ID"),
         row.getAs[Int]("DEST_AIRPORT_ID"),
         row.getAs[Int]("CRS_DEP_TIME"),
-        row.getAs[Int]("DISTANCE_GROUP")
-        //row.getAs[Float]("PRCP"),
-        //row.getAs[Float]("SNOW"),
-        //row.getAs[Float]("SNWD"),
-        //row.getAs[Float]("TAVG"),
-        //row.getAs[Float]("TMAX"),
-        //row.getAs[Float]("TMIN"),
-        //row.getAs[Float]("WESF"),
-        //row.getAs[Int]("WT01"),
-        //row.getAs[Int]("WT02"),
-        //row.getAs[Int]("WT03"),
-        //row.getAs[Int]("WT04"),
-        //row.getAs[Int]("WT05"),
-        //row.getAs[Int]("WT06"),
-        //row.getAs[Int]("WT07"),
-        //row.getAs[Int]("WT08"),
-        //row.getAs[Int]("WT11")
+        row.getAs[Int]("DISTANCE_GROUP")//,
+        /*row.getAs[Float]("PRCP"),
+        row.getAs[Float]("SNOW"),
+        row.getAs[Float]("SNWD"),
+        row.getAs[Float]("TAVG"),
+        row.getAs[Float]("TMAX"),
+        row.getAs[Float]("TMIN"),
+        row.getAs[Float]("WESF"),
+        row.getAs[Int]("WT01"),
+        row.getAs[Int]("WT02"),
+        row.getAs[Int]("WT03"),
+        row.getAs[Int]("WT04"),
+        row.getAs[Int]("WT05"),
+        row.getAs[Int]("WT06"),
+        row.getAs[Int]("WT07"),
+        row.getAs[Int]("WT08"),
+        row.getAs[Int]("WT11")*/
       )))
 
 
-
-    val splits = dtData.randomSplit(Array(0.1, 0.9))
+    //split data for training and testing
+    val splits = dtData.randomSplit(Array(0.5, 0.5))
     val (trainingData, testData) = (splits(0), splits(1))
 
     // Train a DecisionTree model.
@@ -117,34 +119,38 @@ object FlightDecisionTree
     val maxDepth = 5
     val maxBins = 32
 
+    //train the model
     val model = DecisionTree.trainClassifier(trainingData, numClasses, categoricalFeaturesInfo,
       impurity, maxDepth, maxBins)
 
-    // Evaluate model on test instances and compute test error
-    val labelAndPreds = testData.map { point =>
-      val prediction = model.predict(point.features)
-      (BigDecimal(point.label).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble,
-        BigDecimal(prediction).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble)
-    }
+    import dataFrameMapper.sparkSession.implicits._
 
-    val avgErr = labelAndPreds.map(r => abs(r._1 - r._2)).sum() / testData.count()
+    //get predictions from testData
+    val labelAndPreds = testData.map(entry => (entry.label, model.predict(entry.features))).toDF()
 
-    val correctCount = labelAndPreds.filter(row => row._1.equals(row._2)).count()
+    val correctCount = labelAndPreds.select("*").where("_1 = _2").count()
 
+    //val labelZeroCount = labelAndPreds.filter(labelAndPreds("_1") === "0.0").count()
+
+    //percentage of correct predictions
     val percentage: Float = correctCount.asInstanceOf[Float] / testData.count() * 100
 
-    //println("Average Error = " + avgErr)
-    println(s"Total: ${testData.count()}")
-    println(s"Correct predictions: : $correctCount")
+    println(s"\nTotal: ${testData.count()}")
+    //println(s"Zero count: $labelZeroCount")
+
+    println(s"Correct predictions: $correctCount")
 
     println(s"Percentage: $percentage")
 
+    //string representation of created decision tree model
+    println("\nLearned classification tree model:\n" + model.toDebugString)
 
-    //println("\nLearned classification tree model:\n" + model.toDebugString)
 
 
-    //labelAndPreds foreach println
 
+
+
+    /*
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
@@ -175,7 +181,11 @@ object FlightDecisionTree
 
     draw(plot, "FD_DT_10-90_Part", writer.FileOptions(overwrite=true))
 
+    */
 
+
+
+    dataFrameMapper.sparkSession.stop()
 
   }
 

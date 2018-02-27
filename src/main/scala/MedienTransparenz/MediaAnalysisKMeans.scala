@@ -2,6 +2,8 @@ package MedienTransparenz
 
 
 import org.apache.log4j.{Level, Logger}
+import org.apache.spark.ml.clustering.KMeans
+import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.functions._
 
@@ -65,20 +67,23 @@ object MediaAnalysisKMeans
       .sort("organisation")
       .na.fill(0)                                 //replace null values with 0
 
+    //pivotTable.describe().show()
+
+
     pivotTable.show()
 
 
 
-    /*
+
+
     //setting up features
     val assembler = new VectorAssembler()
-      .setInputCols(Array(
-        "media",
-        "amount"
-      )).setOutputCol("features")
+      .setInputCols(
+        (0 to pivotTable.count().toInt).map(number => number.toString).toArray
+      ).setOutputCol("features")
 
     //mapped dataset
-    val dataFrameKM = assembler.transform(indexedFrame).select("features").cache()
+    val dataFrameKM = assembler.transform(pivotTable).select("features").cache()
 
     //dataFrameKM.show()
 
@@ -99,7 +104,9 @@ object MediaAnalysisKMeans
     // Shows the result
     println("Final Centers: ")
     model.clusterCenters.foreach(println)
-    */
+
+
+    dataFrameMapper.sparkSession.stop()
 
 
   }
