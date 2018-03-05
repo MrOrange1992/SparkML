@@ -1,6 +1,0 @@
-1) Problem -> Clustering Algorithm only taking numeric types
-    Solution 1 ->   Group "org" and "media" and add id field
-                    then use id fields for algorithm
-                    then join back with String for evaluation
-
-2) Problem -> understanding what feature vector for MT Data???

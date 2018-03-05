@@ -5,7 +5,7 @@ import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, functions}
 import org.apache.spark.sql.functions.udf
 import co.theasi.plotly
 import co.theasi.plotly.{Plot, writer}
@@ -14,7 +14,7 @@ import co.theasi.plotly._
 
 
 
-object NBA_LinearRegression
+object NBA_LinReg_ML
 {
 
   def main(args: Array[String]): Unit =
@@ -22,7 +22,7 @@ object NBA_LinearRegression
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
     // Use new SparkSession interface in Spark 2.0
-    val spark = SparkSession.builder.appName("NBA_LinearRegression").master("local[*]").getOrCreate()
+    val spark = SparkSession.builder.appName("NBA_LinReg_ML").master("local[*]").getOrCreate()
 
     /*
       Currently Available (Nov 2017)
@@ -120,8 +120,11 @@ object NBA_LinearRegression
     val predictions = lrModel.transform(testData)
     //predictions.show()
 
+
+    import spark.implicits._
+
     //show residuals
-    predictions.select(($"label" - $"prediction").as("residuals")).show()
+    predictions.withColumn("error", functions.abs($"label" - $"prediction")).drop("features").show()
 
     //calculate accuracy of predictions
     val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
@@ -131,7 +134,7 @@ object NBA_LinearRegression
 
 
 
-
+    /*
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
@@ -159,7 +162,7 @@ object NBA_LinearRegression
 
 
     draw(plot, "NBA_LR_16-17_50-50_All", writer.FileOptions(overwrite=true))
-
+    */
 
 
 

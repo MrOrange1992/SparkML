@@ -5,6 +5,11 @@ import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.functions._
+import co.theasi.plotly
+import co.theasi.plotly.{Plot, writer}
+import co.theasi.plotly._
+
+
 
 
 object FD_LinReg_ML
@@ -23,23 +28,31 @@ object FD_LinReg_ML
 
     //dataFrame.show()
 
+    def num2bolNum: (Float => Double) = v => { if (v > 20) 1.0 else 0.0 }
+
+    val bool2int_udf = udf(num2bolNum)
+
+    val convertLabel = expandedFrame
+      .withColumn("label", bool2int_udf(dataFrame("DEP_DELAY")))
+
+    convertLabel.describe().show()
 
     //points per game as label
-    val lrData = expandedFrame
+    val lrData = convertLabel
       .select(
-        expandedFrame("DEP_DELAY").as("label"),
+        convertLabel("label"),
         //expandedFrame("YEAR"),
         //expandedFrame("QUARTER"),
         //expandedFrame("MONTH"),
-        expandedFrame("DAY_OF_MONTH"),
-        expandedFrame("DAY_OF_WEEK"),
-        expandedFrame("AIRLINE_ID"),
-        expandedFrame("ORIGIN_AIRPORT_ID"),
-        expandedFrame("DEST_AIRPORT_ID"),
-        expandedFrame("CRS_DEP_TIME"),
-        expandedFrame("DEP_DELAY_NEW"),
-        expandedFrame("CRS_ARR_TIME"),
-        expandedFrame("DISTANCE_GROUP"))
+        convertLabel("DAY_OF_MONTH"),
+        convertLabel("DAY_OF_WEEK"),
+        convertLabel("AIRLINE_ID"),
+        convertLabel("ORIGIN_AIRPORT_ID"),
+        convertLabel("DEST_AIRPORT_ID"),
+        convertLabel("CRS_DEP_TIME"),
+        convertLabel("DEP_DELAY_NEW"),
+        convertLabel("CRS_ARR_TIME"),
+        convertLabel("DISTANCE_GROUP"))
 
     lrData.groupBy(lrData("DEST_AIRPORT_ID")).count().describe().show()
 
@@ -101,7 +114,7 @@ object FD_LinReg_ML
 
     //test the model
     val predictions = lrModel.transform(testData)
-    predictions.filter(predictions("label") === 1f).show()
+    //predictions.filter(predictions("label") === 1f).show()
 
     //show residuals
     //predictions.select(($"label" - $"prediction").as("residuals")).show()
@@ -112,6 +125,42 @@ object FD_LinReg_ML
     println(s"Accuracy: $accuracy")
 
     //------------------------------------------------------------------------------------------------------------------
+
+
+
+
+    //PLOTLY
+    //------------------------------------------------------------------------------------------------------------------
+
+    import dataFrameMapper.sparkSession.implicits._
+
+    //val plotData = predictions.rdd.toDS()//.sort($"_1").withColumn("label", $"_1").withColumn("prediction", $"_2")
+
+    //plotData.describe().show()
+
+    val evalFrame = predictions.filter(predictions("label") === 1f && predictions("prediction") >= 0.5)//randomSplit(Array(0.5, 0.5))(0)
+
+    val xs = 0 until 500
+
+
+    implicit val y1: Array[Double] = evalFrame.select($"label").rdd.map(_(0).toString.toDouble).collect().take(500)
+    implicit val y2: Array[Double] = evalFrame.select($"prediction").rdd.map(_(0).toString.toDouble).collect().take(500)
+
+
+
+    // Options common to traces
+    val commonOptions = ScatterOptions().mode(ScatterMode.Marker).marker(MarkerOptions().size(8).lineWidth(1))
+
+
+    // The plot itself
+    val plot = Plot()
+      .withScatter(xs, y1, commonOptions.name("Label"))
+      .withScatter(xs, y2, commonOptions.name("Prediction"))
+
+
+
+    draw(plot, "FD_LinReg_ML", writer.FileOptions(overwrite=true))
+
 
   }
 }

@@ -1,0 +1,69 @@
+training/test data -> 50/50
+
+maxdepth = 3
+maxBins = 100
+
+features:
+    player.gamesPlay
+    player.minSecPG,
+    player.fgPct,
+    player.ftPct,
+    player.position,
+    player.weight,
+    player.height
+
+
+
+
+
+
+Learned classification tree model:
+DecisionTreeModel regressor of depth 3 with 15 nodes
+  If (feature 1 <= 1393.0999755859375)
+   If (feature 1 <= 674.0)
+    If (feature 1 <= 298.6000061035156)
+     Predict: 0.5157894719588129
+    Else (feature 1 > 298.6000061035156)
+     Predict: 2.7162161984959163
+   Else (feature 1 > 674.0)
+    If (feature 1 <= 1070.199951171875)
+     Predict: 5.3433962363117145
+    Else (feature 1 > 1070.199951171875)
+     Predict: 7.7216216551290975
+  Else (feature 1 > 1393.0999755859375)
+   If (feature 1 <= 1920.4000244140625)
+    If (feature 1 <= 1816.800048828125)
+     Predict: 11.127777770713523
+    Else (feature 1 > 1816.800048828125)
+     Predict: 15.038461611821102
+   Else (feature 1 > 1920.4000244140625)
+    If (feature 3 <= 86.80000305175781)
+     Predict: 20.90000009536743
+    Else (feature 3 > 86.80000305175781)
+     Predict: 25.014285496303014
+
+Average Error = 1.8982608695652174
++----+----+
+|  _1|  _2|
++----+----+
+| 0.0| 0.5|
+| 2.4| 5.3|
+| 7.9|11.1|
+| 1.9| 2.7|
+| 0.0| 0.5|
+| 0.9| 0.5|
+|11.4|20.9|
+| 4.8| 5.3|
+| 3.3| 5.3|
+| 2.5| 2.7|
+| 5.8| 5.3|
+| 8.9| 7.7|
+| 6.7| 7.7|
+|14.6|20.9|
+| 6.6| 5.3|
+| 4.7| 5.3|
+| 8.7| 5.3|
+|10.3|11.1|
+| 1.8| 2.7|
+| 2.9| 5.3|
++----+----+

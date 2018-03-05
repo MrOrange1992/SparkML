@@ -60,11 +60,10 @@ object NBA_DT_Mllib_Reg_Variance
     //  Empty categoricalFeaturesInfo indicates all features are continuous.
     val categoricalFeaturesInfo = Map[Int, Int]()
     val impurity = "variance"
-    val maxDepth = 25
-    val maxBins = 32
+    val maxDepth = 3
+    val maxBins = 100
 
-    val model = DecisionTree.trainRegressor(trainingData, categoricalFeaturesInfo, impurity,
-      maxDepth, maxBins)
+    val model = DecisionTree.trainRegressor(trainingData, categoricalFeaturesInfo, impurity, maxDepth, maxBins)
 
     // Evaluate model on test instances and compute test error
     val labelAndPreds = testData.map { point =>
@@ -78,8 +77,9 @@ object NBA_DT_Mllib_Reg_Variance
     val avgErr = labelAndPreds.map(r => abs(r._1 - r._2)).sum() / testData.count()
 
 
-    println("Average Error = " + avgErr)
     println("\nLearned classification tree model:\n" + model.toDebugString)
+
+    println("Average Error = " + avgErr)
 
 
     labelAndPreds.toDS().show()
