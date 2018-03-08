@@ -1,0 +1,37 @@
+Additional Information for AustrianElections.csv
+---
+ALL INFORMATION TAKEN FROM https://de.wikipedia.org/wiki/Wahltermine_in_�sterreich - PROVIDED WITH EXCLUSION OF ANY WARRANTY WHATSOEVER
+
+Data from 20121 - 20174
+---
+TYP:
+NR	-	Nationalratswahl 			-	legislative election
+LT	-	Landtagswahl				-	state legislature election
+BP1WG	-	Bundespr�sidentenwahl, 1. Wahlgang	-	presidential election, first ballot
+BP1SW	-	Bundespr�sidentenwahl, 1. Stichwahl	-	presidential election, first run-off
+BP2SW	-	Bundespr�sidentenwahl, 2. Stichwahl	-	presidential election, second run-off
+GR	-	Gemeinderat				-	regional council election
+---
+ORT:
+OE	-	�sterreichweit				-	Austria wide
+BGLD	-	Burgenland				-	Burgenland
+KTN	- 	K�rnten					-	Carinthia
+NOE	-	Nieder�sterreich			-	Lower Austria
+OOE	-	Ober�strreich				-	Upper Austria
+SBG	-	Salzburg				-	Salzburg
+STMK	- 	Steiermark				- 	Styria
+T	-	Tirol					-	Tyrol
+VBG	-	Vorarlberg				-	Vorarlberg
+W	-	Wien					-	Vienna
+
+
+
+NOE = AT-3
+OOE = AT-4
+SLB = AT-5
+STM = AT-6
+TIR = AT-7
+VOR = AT-8
+VIE = AT-9
+KÄR = AT-2
+BGL = AT-1
