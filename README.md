@@ -1,8 +1,8 @@
 # SparkML
 
 ### Contributors
-* Lukas Schneider
-* Felix Rauchenwald
+* Lukas Schneider (lukas.schneider@edu.fh-joanneum.at)
+* Felix Rauchenwald (felix.rauchenwald@edu.fh-joanneum.at)
 
 ## Setup Instructions
 Prerequired Software:
@@ -13,8 +13,8 @@ Prerequired Software:
 * (Scala SBT)
 
 For a working Apache Spark 2.2.0 environment the combination of Java 8 and Scala 2.10.6 is needed. This may be object to change in future versions.
-To create plots with the scala Plotly library an account for https://plot.ly is needed. If you are using the same configuration as setup in this project, make sure to use the same depency provided in the build.sbt in this repository. 
-"co.theasi" %% "plotly" % "0.1"
+To create plots with the scala Plotly library an account for https://plot.ly is needed. If you are using the same configuration as setup in this project, make sure to use the same depency provided in the build.sbt in this repository like this:
+<p align="center">"co.theasi" %% "plotly" % "0.1"</p>
 
 To use the NBA data sets used in this project an API key for MySportsFeeds (https://www.mysportsfeeds.com) is needed. 
 
