@@ -29,6 +29,8 @@ The aim of this project is to analyse the Apache Spark Framework and its capabil
 The data sets used for the application of these models vary in size and detail to test their effectiveness and applicability.  
 
 ## Data
+The corresponding data files can be found in ./dataFiles. Not included are flight and weather data due to permission restrictions. 
+
 ### NBA Statistic Data
 This data set is used for predicting NBA players points per game based on features like: field goal percentage, position, minutes per game and others. The prediction values are achieved by the implementation of linear regression and decision tree algorithms built into the spark ML and MLlib libraries. The data is obtained from the MySportsFeeds API over HTTP requests. 
 
