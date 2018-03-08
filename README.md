@@ -7,11 +7,11 @@ Felix Rauchenwald
 
 ## Setup Instructions
 Prerequired Software:
-1) IntelliJ IDEA / Eclipse IDE
-2) Java 8
-3) Spark 2.2.0 or newer
-4) Scala 2.10.6
-5) (Scala SBT)
+* IntelliJ IDEA / Eclipse IDE
+* Java 8
+* Spark 2.2.0 or newer
+* Scala 2.10.6
+* (Scala SBT)
 
 For a working Apache Spark 2.2.0 environment the combination of Java 8 and Scala 2.10.6 is needed. This may be object to change in future versions.
 To create plots with the scala Plotly library an account for https://plot.ly is needed. If you are using the same configuration as setup in this project, make sure to use the same depency provided in the build.sbt in this repository. 
@@ -40,3 +40,6 @@ Data of flights in California USA are combined with weather data for this area t
 https://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236&DB_Short_Name=On-Time
 The weather data was obtained from the National Centers for Environmental Information.
 https://www.ncdc.noaa.gov/cdo-web/search
+
+## Results
+The results and outputs of the implementations can be found as corresponding .txt files in ./results.
