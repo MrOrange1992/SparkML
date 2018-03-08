@@ -1,16 +1,15 @@
 package MedienTransparenz
 
-import co.theasi.plotly.{MarkerOptions, Plot, ScatterMode, ScatterOptions, draw, writer}
+
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.clustering.{KMeans, KMeansModel}
+import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{sum, udf}
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.functions._
 
-import scala.util.Random
 
-object KMeansBookExample
+
+object MediaAnalysisKMeansPivotTable
 {
   def main(args: Array[String]): Unit =
   {
@@ -171,7 +170,7 @@ object KMeansBookExample
       .withColumn("media", mediaToIndex_udf(dataFrame("media")))
       //.withColumn("federalState", federalStateToInt_udf(dataFrame("federalState")))
 
-    //indexedFrame.describe().show()
+    indexedFrame.describe().show()
 
 
 
@@ -185,7 +184,7 @@ object KMeansBookExample
 
 
 
-/*
+
     //create pivot table for media columns and organisation rows with percentage value cells
     val pivotTable = indexedFrame
       .groupBy("organisation")
@@ -198,93 +197,47 @@ object KMeansBookExample
 
 
     pivotTable.show()
-    */
-
-    val numericFrame = indexedFrame.filter(_ != "sumAmountByOrg").filter(_ != "sumOrgTotal")
 
 
-    numericFrame.describe().show()
 
 
-    val assembler = new VectorAssembler().setInputCols(numericFrame.columns).setOutputCol("features")
 
-    /*
+
     //setting up features
     val assembler = new VectorAssembler()
       .setInputCols(
         (0 to pivotTable.count().toInt).map(number => number.toString).toArray
       ).setOutputCol("features")
-      */
+
+    //mapped dataset
+    val dataFrameKM = assembler.transform(pivotTable).select("features").cache()
+
+    //dataFrameKM.show()
 
 
-    val kmeans = new KMeans().setPredictionCol("cluster").setFeaturesCol("features")
+    // Trains a k-means model
+    val kmeans = new KMeans()
+      .setK(3)
+      .setFeaturesCol("features")
+      .setPredictionCol("prediction")
 
-    val pipeline = new Pipeline().setStages(Array(assembler, kmeans))
+    val model = kmeans.fit(dataFrameKM)
 
-    val pipelineModel = pipeline.fit(indexedFrame)
-
-    val kMeansModel = pipelineModel.stages.last.asInstanceOf[KMeansModel]
-
-    kMeansModel.clusterCenters foreach println
-
-
-    val withCluster = pipelineModel.transform(numericFrame)
-
-    val wCluster = withCluster.select("cluster", "polOr").groupBy("cluster", "polOr").count()
-
-    wCluster.orderBy(wCluster("cluster"), wCluster("count").desc).show()
-
+    val WSSSE = model.computeCost(dataFrameKM)
+    println(s"Within Set Sum of Squared Errors = $WSSSE")
 
 
 
-    def clusteringScore(data: DataFrame, k: Int): Double =
-    {
-      val assembler = new VectorAssembler().setInputCols(data.columns).setOutputCol("features")
+    // Shows the result
+    println("Final Centers: ")
+    model.clusterCenters.foreach(println)
 
-      val kMeans = new KMeans()
-        .setSeed(Random.nextLong())
-        .setK(k)
-          .setMaxIter(40)
-          .setTol(1.0e-5)
-        .setPredictionCol("cluster")
-        .setFeaturesCol("features")
+    model.summary.predictions.show()
 
-      val pipeline = new Pipeline().setStages(Array(assembler, kMeans))
+    val lengthCL = model.summary.clusterSizes
 
-      val kMeansModel = pipeline.fit(data).stages.last.asInstanceOf[KMeansModel]
+    lengthCL foreach println
 
-      kMeansModel.computeCost(assembler.transform(data)) / data.count()
-    }
-
-    val kList = (2 to 16 by 2 ).map(k => clusteringScore(numericFrame, k))
-
-
-
-
-    //PLOTLY
-    //------------------------------------------------------------------------------------------------------------------
-
-
-    implicit val x: Array[Double] = (2.asInstanceOf[Double] to 16 by 2).toArray
-    implicit val y: Array[Double] = kList.toArray
-
-
-
-
-    // Options common to traces
-    val commonOptions = ScatterOptions().mode(ScatterMode.Marker).marker(MarkerOptions().size(8).lineWidth(1))
-
-
-    // The plot itself
-    val plot = Plot()
-      .withScatter(x, y, commonOptions.name("K"))
-
-
-
-    draw(plot, "MT_KMeans", writer.FileOptions(overwrite=true))
-
-
-    //stop session
 
 
     dataFrameMapper.sparkSession.stop()
@@ -292,5 +245,187 @@ object KMeansBookExample
 
   }
 
-
 }
+
+
+// OLD CODE
+
+//sanity check organisation
+//println(indexedFrame.select().where("organisation='678'").count())
+//println(organisationMap.map(entry => entry._2 -> entry._1).get(678)) //returns 712
+//712 matches in csv search for "Agrarmarkt Austria Marketing GesmbH"
+
+//val reducedMedia: Array[String] = indexedFrame.select("media").groupBy("media").count().drop("count").rdd.map(row => row(0).toString).collect()
+
+//reducedMedia foreach println
+
+//indexedFrame.rdd.map(row => row(2)) foreach println
+
+//df.withColumn("prodID", explode(col("prodIDList")))
+
+//val mediaAmountMap = indexedFrame.groupBy("media").sum("amount").rdd.map(row => row(0).toString -> row(1).toString).collect().toMap //.rdd.map((a, b) => (a(0), b(0))) foreach println//.map(row => (a, b) => )//.withColumn("media", explode(indexedFrame("amount"))).show()
+
+//mediaAmountMap foreach println
+
+//val mediaFrame = indexedFrame.groupBy("media").sum("amount")
+
+//mediaFrame.show()
+
+/*
+  Sum spendings of each organisation to certain media
+ */
+
+/*
+
+    val percentageTable = pivotTable
+      .columns
+      .foldLeft(pivotTable) { (memoDF, colName) =>
+        memoDF
+          .withColumn(
+            colName,
+            col(colName) / sum(col(colName)).over()
+            //colName.toLowerCase().replace(" ", "_")
+          )
+      }
+
+    percentageTable.show()
+
+    */
+
+/*
+  .groupBy("code")
+  .agg(sum("count").alias("count"))
+  .withColumn("fraction", col("count") /  sum("count").over())
+  */
+
+//mediaJoinedDF.sort("media").show()
+
+//val clusteringMap: scala.collection.mutable.Map[Int, ((Int, Float))] = scala.collection.mutable.Map()
+
+
+/*
+
+
+val clusteringMap = indexedFrame.rdd.map(row => {
+  //clusteringMap(row(1).toString.toInt, (row(0).toString.toInt, row(3).toString.toFloat))
+  row(0).toString.toInt -> (row(2).toString.toInt, row(5).toString.toFloat)
+}).groupBy(_._1).mapValues(_.map(_._2).toMap).collectAsMap()
+//m.groupBy(x => x._2).mapValues(_.keys.toList)
+
+//println(clusteringMap.keys.count())
+
+
+
+
+
+
+val clusterArray: Array[Array[Float]] = Array.ofDim[Float](clusteringMap.keys.size, 4185)
+
+for (org <- clusteringMap.keys) {
+
+  for (med <- 0 to 4184) {
+    /*clusterArray(org)(med) = clusteringMap.get(org).collect {
+      case (med, b) => b
+      case _ => 0f
+    }.*/
+
+    //map.get('type).map("prefix" + _).getOrElse("")
+
+    clusterArray(org)(med) = clusteringMap.get(org).get.get(med).getOrElse(0)
+
+    //clusterArray(org)(med) = clusteringMap.get(org).filter(_._1.toInt.equals(med.toInt)).map(_._2).getOrElse(0)
+
+
+  }
+}
+
+*/
+//clusterArray.foreach(_.foreach(println(_)))
+
+//val df = dataFrameMapper.sparkSession.sparkContext.parallelize(clusteringMap.toArray)
+
+//df foreach println
+
+//clusterArray.map()
+
+
+//clusteringMap.values.reduce((a ,b) => if (a._1 == b._1) (a._1, a._2 + b._2) else a)
+
+//println(clusteringMap.keys.size)
+
+
+
+//indexedFrame.groupBy("media").count().describe().show()
+
+
+/*
+import dataFrameMapper.sparkSession.implicits._
+
+val df = mediaAmountMap.toSeq.toDF("mediaIndex", "amount")
+
+df.show()
+*/
+
+//val dataFr = (one(0), two(0))._1
+
+//indexedFrame.show()
+
+
+
+  /*
+
+def orgToPolOrient = udf((date: Int, orgName: String) =>
+{
+if (dateToChancellorMap.getOrElse(date, "") == "Faymann")
+{
+if (orgName == "Bundeskanzleramt") 3
+else if (orgName.contains("Arbeit")) 2
+else if (orgName.contains("Bildung")) 2
+else if (orgName.contains("Europa")) 1
+else if (orgName.contains("Familie")) 9
+else if (orgName.contains("Finanzen")) 1
+else if (orgName.contains("Gesundheit")) 2
+else if (orgName.contains("Inneres")) 1
+else if (orgName.contains("Umwelt")) 1
+else if (orgName.contains("Landesverteidigung")) 2
+else if (orgName.contains("Verkehr")) 2
+else if (orgName.contains("Wissenschaft")) 1
+else 999
+}
+else if (dateToChancellorMap.getOrElse(date, "") == "Kern")
+{
+if (orgName == "Bundeskanzleramt") 3
+else if (orgName.contains("Arbeit")) 2
+else if (orgName.contains("Bildung")) 2
+else if (orgName.contains("Europa")) 1
+else if (orgName.contains("Familie")) 9
+else if (orgName.contains("Finanzen")) 1
+else if (orgName.contains("Gesundheit")) 2
+else if (orgName.contains("Inneres")) 1
+else if (orgName.contains("Umwelt")) 1
+else if (orgName.contains("Landesverteidigung")) 2
+else if (orgName.contains("Verkehr")) 2
+else if (orgName.contains("Wissenschaft")) 1
+else 999
+}
+else 999
+})
+
+
+
+val dateToChancellorMap: Map[Int, String] = Map(
+      20141 -> "Faymann",
+      20142 -> "Faymann",
+      20143 -> "Faymann",
+      20144 -> "Faymann",
+      20151 -> "Faymann",
+      20152 -> "Faymann",
+      20153 -> "Faymann",
+      20154 -> "Faymann",
+      20161 -> "Faymann",
+      20163 -> "Kern",
+      20164 -> "Kern",
+      20171 -> "Kern",
+      20172 -> "Kern"
+    )
+  */
