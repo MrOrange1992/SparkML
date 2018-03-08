@@ -1,9 +1,8 @@
-## SparkML
+# SparkML
 
-## Contributors
-Lukas Schneider
-
-Felix Rauchenwald
+### Contributors
+* Lukas Schneider
+* Felix Rauchenwald
 
 ## Setup Instructions
 Prerequired Software:
