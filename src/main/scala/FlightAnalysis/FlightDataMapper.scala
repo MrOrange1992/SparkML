@@ -41,8 +41,6 @@ class FlightDataMapper
   val dataFrame: sql.DataFrame = sparkSession.sqlContext.read
     .format("com.databricks.spark.csv")
     .schema(customSchemaFlight)
-    //.option("nullValue", "null")
-    //.option("treatEmptyValuesAsNulls", "true")
     .option("header", "true")
     .option("delimiter", ",")
     .option("escape", "\"")
@@ -65,40 +63,37 @@ class FlightDataMapper
 
    */
 
-  val customSchemaWeather = StructType(
-    Array
-    (
-      StructField("STATION", StringType, true),
-      StructField("NAME", StringType, true),
-      StructField("DATE", StringType, true),
-      StructField("PRCP", FloatType, true),
-      StructField("SNOW", FloatType, true),
-      StructField("SNWD", FloatType, true),
-      StructField("TAVG", FloatType, true),
-      StructField("TMAX", FloatType, true),
-      StructField("TMIN", FloatType, true),
-      StructField("WESF", FloatType, true),
-      StructField("WT01", IntegerType, true),
-      StructField("WT02", IntegerType, true),
-      StructField("WT03", IntegerType, true),
-      StructField("WT04", IntegerType, true),
-      StructField("WT05", IntegerType, true),
-      StructField("WT06", IntegerType, true),
-      StructField("WT07", IntegerType, true),
-      StructField("WT08", IntegerType, true),
-      StructField("WT11", IntegerType, true)
-    )
+val customSchemaWeather = StructType(
+  Array
+  (
+    StructField("STATION", StringType, true),
+    StructField("NAME", StringType, true),
+    StructField("DATE", StringType, true),
+    StructField("PRCP", FloatType, true),
+    StructField("SNOW", FloatType, true),
+    StructField("SNWD", FloatType, true),
+    StructField("TAVG", FloatType, true),
+    StructField("TMAX", FloatType, true),
+    StructField("TMIN", FloatType, true),
+    StructField("WESF", FloatType, true),
+    StructField("WT01", IntegerType, true),
+    StructField("WT02", IntegerType, true),
+    StructField("WT03", IntegerType, true),
+    StructField("WT04", IntegerType, true),
+    StructField("WT05", IntegerType, true),
+    StructField("WT06", IntegerType, true),
+    StructField("WT07", IntegerType, true),
+    StructField("WT08", IntegerType, true),
+    StructField("WT11", IntegerType, true)
   )
+)
 
-  val weatherFrame: sql.DataFrame = sparkSession.sqlContext.read
-    .format("com.databricks.spark.csv")
-    .schema(customSchemaWeather)
-    //.option("nullValue", "null")
-    //.option("treatEmptyValuesAsNulls", "true")
-    .option("header", "true")
-    .option("delimiter", ",")
-    .option("escape", "\"")
-    //.option("0", null)
-    .load("./dataFiles/WeatherData.csv")
+val weatherFrame: sql.DataFrame = sparkSession.sqlContext.read
+  .format("com.databricks.spark.csv")
+  .schema(customSchemaWeather)
+  .option("header", "true")
+  .option("delimiter", ",")
+  .option("escape", "\"")
+  .load("./dataFiles/WeatherData.csv")
 
 }

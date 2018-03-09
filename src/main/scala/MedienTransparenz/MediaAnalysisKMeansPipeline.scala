@@ -175,7 +175,7 @@ object MediaAnalysisKMeansPipeline
 
     val assembler = new VectorAssembler().setInputCols(numericFrame.columns).setOutputCol("features")
 
-    val kmeans = computeKMeans(numericFrame, 6)
+    val kmeans = computeKMeans(numericFrame, 3)
 
     val pipeline = new Pipeline().setStages(Array(assembler, kmeans))
     val pipelineModel = pipeline.fit(indexedFrame)

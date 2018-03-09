@@ -7,14 +7,14 @@ import scala.io.Source
 
 class WrapperMySportsAPI extends Serializable
 {
-  //username and password for API requests
-  val apiKey: String = getProperty("username").get + ":" +  getProperty("password").get
+//username and password for API requests
+val apiKey: String = getProperty("username").get + ":" +  getProperty("password").get
 
-  //base URL path for API pull request
-  val pullURL: String = "https://api.mysportsfeeds.com/v1.1/pull/nba/"
+//base URL path for API pull request
+val pullURL: String = "https://api.mysportsfeeds.com/v1.1/pull/nba/"
 
-  //request only needed stats from API
-  val playerStatsRequest: String = "?playerstats=MIN/G,PTS/G,AST/G,REB/G,FT%25,FG%25"
+//request only needed stats from API
+val playerStatsRequest: String = "?playerstats=MIN/G,PTS/G,AST/G,REB/G,FT%25,FG%25"
 
 
 
