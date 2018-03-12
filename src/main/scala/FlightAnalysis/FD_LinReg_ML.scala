@@ -5,6 +5,7 @@ import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.functions._
+
 import co.theasi.plotly
 import co.theasi.plotly.{Plot, writer}
 import co.theasi.plotly._
@@ -19,8 +20,11 @@ object FD_LinReg_ML
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
 
+
     //instance for mapper class for sparkSession
     val dataFrameMapper: FlightDataMapper = new FlightDataMapper
+
+    import dataFrameMapper.sparkSession.implicits._
 
     val dataFrame = dataFrameMapper.mappedFrameNoCancelled
 
@@ -35,7 +39,7 @@ object FD_LinReg_ML
     val convertLabel = expandedFrame
       .withColumn("label", bool2int_udf(dataFrame("DEP_DELAY")))
 
-    convertLabel.describe().show()
+    //convertLabel.describe().show()
 
     //points per game as label
     val lrData = convertLabel
@@ -54,7 +58,7 @@ object FD_LinReg_ML
         convertLabel("CRS_ARR_TIME"),
         convertLabel("DISTANCE_GROUP"))
 
-    lrData.groupBy(lrData("DEST_AIRPORT_ID")).count().describe().show()
+    //lrData.groupBy(lrData("DEST_AIRPORT_ID")).count().describe().show()
 
     //lrData.describe().show()
 
@@ -117,7 +121,7 @@ object FD_LinReg_ML
     //predictions.filter(predictions("label") === 1f).show()
 
     //show residuals
-    //predictions.select(($"label" - $"prediction").as("residuals")).show()
+    predictions.select($"label", $"prediction").describe().show()
 
     //calculate accuracy of predictions
     val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
@@ -132,7 +136,8 @@ object FD_LinReg_ML
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
-    import dataFrameMapper.sparkSession.implicits._
+
+    /*
 
     //val plotData = predictions.rdd.toDS()//.sort($"_1").withColumn("label", $"_1").withColumn("prediction", $"_2")
 
@@ -161,6 +166,7 @@ object FD_LinReg_ML
 
     draw(plot, "FD_LinReg_ML", writer.FileOptions(overwrite=true))
 
+*/
 
   }
 }

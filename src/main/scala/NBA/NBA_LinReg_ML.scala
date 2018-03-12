@@ -78,25 +78,34 @@ object NBA_LinReg_ML
 
 
     //points per game as label
-    val lrData = players.select($"pointsPG".as("label"), $"position", $"height", $"weight", $"gamesPlayed", $"minSecPG", $"fgPct", $"ftPct")
+    val lrData = players.select(
+      $"pointsPG".as("label"),
+      $"position",
+      $"height",
+      $"weight",
+      $"gamesPlayed",
+      $"minSecPG",
+      $"fgPct",
+      $"ftPct"
+    )
 
     //setting up features
-    val assembler = new VectorAssembler().setInputCols(Array("position", "height", "weight", "gamesPlayed", "minSecPG", "fgPct", "ftPct")).setOutputCol("features")
+    val assembler = new VectorAssembler().setInputCols(Array(
+      //"position",
+      //"height",
+      //"weight",
+      "gamesPlayed",
+      "minSecPG",
+      "fgPct"
+      //"ftPct"
+    )).setOutputCol("features")
 
     //mapped dataset for Linear Regression
     val dataLR = assembler.transform(lrData).select("label", "features")
-
-    //splitting data into training data and test data
-
-    val splitData = dataLR.randomSplit(Array(0.5, 0.5))
-    val trainingData = splitData(0)
-    val testData = splitData(1)
-
-    //Linear Regression model
-    val lr = new LinearRegression()
-
-    //train the model
-    val lrModel = lr.fit(trainingData)
+    val splits = dataLR.randomSplit(Array(0.5, 0.5))
+    val (trainingData, testData) = (splits(0), splits(1))
+    //train the lr model
+    val lrModel = new LinearRegression().fit(trainingData)
 
 
     //summary / evaluation of trained model
@@ -124,7 +133,9 @@ object NBA_LinReg_ML
     import spark.implicits._
 
     //show residuals
-    predictions.withColumn("error", functions.abs($"label" - $"prediction")).drop("features").show()
+    predictions.withColumn("AvgError", functions.abs($"label" - $"prediction")).drop("features").describe().show()
+
+
 
     //calculate accuracy of predictions
     val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
@@ -134,15 +145,16 @@ object NBA_LinReg_ML
 
 
 
-    /*
+
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
+    /*
     val plotData = predictions.sort("label")
 
     plotData.describe().show()
 
-    val xs = 0 until 300
+    val xs = 0 until 200
 
 
     implicit val y1: Array[Double] = plotData.select($"label").rdd.map(_(0).toString.toDouble).collect()
@@ -163,11 +175,6 @@ object NBA_LinReg_ML
 
     draw(plot, "NBA_LR_16-17_50-50_All", writer.FileOptions(overwrite=true))
     */
-
-
-
-
-
 
 
     //------------------------------------------------------------------------------------------------------------------

@@ -54,11 +54,11 @@ object NBA_DT_ML_Reg_Variance
 
     val vectorAssembler = new VectorAssembler()
       .setInputCols(Array(
-        "weight",
-        "height",
-        "position",
+        //"weight",
+        //"height",
+        //"position",
         "fgPct",
-        "ftPct",
+        //"ftPct",
         "minSecPG",
         "gamesPlayed"
       ))
@@ -66,13 +66,13 @@ object NBA_DT_ML_Reg_Variance
 
 
     // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = testSet.randomSplit(Array(0.5, 0.5))
+    val Array(trainingData, testData) = testSet.randomSplit(Array(0.7, 0.3))
 
     // Train a DecisionTree model.
     val dt = new DecisionTreeRegressor()
       .setLabelCol("label")
       .setFeaturesCol("features")
-      .setMaxDepth(3)
+      .setMaxDepth(6)
       .setMaxBins(100)
 
     // Chain indexer and tree in a Pipeline.
@@ -107,6 +107,7 @@ object NBA_DT_ML_Reg_Variance
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
+    /*
     val xs = 0 until 300
 
 
@@ -124,6 +125,7 @@ object NBA_DT_ML_Reg_Variance
 
     draw(plot, "NBA_DT_ML", writer.FileOptions(overwrite=true))
 
+    */
   }
 
 }

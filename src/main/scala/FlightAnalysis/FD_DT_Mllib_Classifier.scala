@@ -64,7 +64,7 @@ object FD_DT_Mllib_Classifier
 
 
     //TODO: delay > 30min/40min
-    def num2bolNum: (Float => Int) = v => { if (v > 20) 1 else 0 }
+    def num2bolNum: (Float => Int) = v => if (v > 20) 1 else 0
 
     val bool2int_udf = udf(num2bolNum)
 
@@ -77,8 +77,7 @@ object FD_DT_Mllib_Classifier
 
     //mapping to LabeledPoint for label / feature Vector
     val dtData = expandedFrame.map(row => LabeledPoint(
-      row.getAs[Int]("IS_DELAYED"), // Get target value
-      // Map feature indices to values
+      row.getAs[Int]("IS_DELAYED"),
       Vectors.dense(
         row.getAs[Int]("MONTH"),
         row.getAs[Int]("DAY_OF_MONTH"),
@@ -87,8 +86,8 @@ object FD_DT_Mllib_Classifier
         row.getAs[Int]("ORIGIN_AIRPORT_ID"),
         row.getAs[Int]("DEST_AIRPORT_ID"),
         row.getAs[Int]("CRS_DEP_TIME"),
-        row.getAs[Int]("DISTANCE_GROUP")//,
-        /*row.getAs[Float]("PRCP"),
+        row.getAs[Int]("DISTANCE_GROUP"),
+        row.getAs[Float]("PRCP"),
         row.getAs[Float]("SNOW"),
         row.getAs[Float]("SNWD"),
         row.getAs[Float]("TAVG"),
@@ -103,7 +102,7 @@ object FD_DT_Mllib_Classifier
         row.getAs[Int]("WT06"),
         row.getAs[Int]("WT07"),
         row.getAs[Int]("WT08"),
-        row.getAs[Int]("WT11")*/
+        row.getAs[Int]("WT11")
       )))
 
 
@@ -126,21 +125,13 @@ object FD_DT_Mllib_Classifier
     import dataFrameMapper.sparkSession.implicits._
 
     //get predictions from testData
-    val labelAndPreds = testData.map(entry => (entry.label, model.predict(entry.features))).toDF()
+val labelAndPreds = testData.map(entry => (entry.label, model.predict(entry.features))).toDF()
+val correctCount = labelAndPreds.select("*").where("_1 = _2").count()
+val percentage: Float = correctCount.asInstanceOf[Float] / testData.count() * 100
 
-    val correctCount = labelAndPreds.select("*").where("_1 = _2").count()
-
-    //val labelZeroCount = labelAndPreds.filter(labelAndPreds("_1") === "0.0").count()
-
-    //percentage of correct predictions
-    val percentage: Float = correctCount.asInstanceOf[Float] / testData.count() * 100
-
-    println(s"\nTotal: ${testData.count()}")
-    //println(s"Zero count: $labelZeroCount")
-
-    println(s"Correct predictions: $correctCount")
-
-    println(s"Percentage: $percentage")
+println(s"\nTotal: ${testData.count()}")
+println(s"Correct predictions: $correctCount")
+println(s"Percentage: $percentage")
 
     //string representation of created decision tree model
     println("\nLearned classification tree model:\n" + model.toDebugString)

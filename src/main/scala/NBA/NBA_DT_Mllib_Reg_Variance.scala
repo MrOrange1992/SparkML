@@ -45,25 +45,26 @@ object NBA_DT_Mllib_Reg_Variance
       Vectors.dense(
         player.gamesPlayed,
         player.minSecPG,
-        player.fgPct
-        //player.ftPct
-        //player.position,
-        //player.weight,
-        //player.height
+        player.fgPct,
+        player.ftPct,
+        player.position,
+        player.weight,
+        player.height
       )
     ))
 
-    val splits = dtData.randomSplit(Array(0.8, 0.2))
+    val splits = dtData.randomSplit(Array(0.5, 0.5))
     val (trainingData, testData) = (splits(0), splits(1))
-
-    // Train a DecisionTree model.
-    //  Empty categoricalFeaturesInfo indicates all features are continuous.
     val categoricalFeaturesInfo = Map[Int, Int]()
     val impurity = "variance"
     val maxDepth = 6
     val maxBins = 100
 
-    val model = DecisionTree.trainRegressor(trainingData, categoricalFeaturesInfo, impurity, maxDepth, maxBins)
+    val model = DecisionTree.trainRegressor(
+      trainingData,
+      categoricalFeaturesInfo,
+      impurity, maxDepth, maxBins
+    )
 
 
     // Evaluate model on test instances and compute test error

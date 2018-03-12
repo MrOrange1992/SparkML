@@ -213,7 +213,7 @@ object MediaAnalysisKMeansPipeline
 
     //PLOTLY          ELBOW PLOT for getting best k
     //------------------------------------------------------------------------------------------------------------------
-
+    /*
 
     // best k seems to be 6 -> plotly elbow plot
     val kList = (2 to 16 by 2).map(k => computeCost(numericFrame, k))
@@ -230,6 +230,7 @@ object MediaAnalysisKMeansPipeline
     val plot = Plot().withScatter(x, y, commonOptions.name("K"))
 
     draw(plot, "MT_KMeans_ElbowBy2", writer.FileOptions(overwrite=true))
+    */
 
     //------------------------------------------------------------------------------------------------------------------
 
