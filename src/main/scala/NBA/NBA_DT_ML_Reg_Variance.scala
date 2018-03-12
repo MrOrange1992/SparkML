@@ -1,5 +1,6 @@
 package NBA
 
+import co.theasi.plotly.{draw, MarkerOptions, Plot, ScatterMode, ScatterOptions, writer}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
@@ -65,7 +66,7 @@ object NBA_DT_ML_Reg_Variance
 
 
     // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = testSet.randomSplit(Array(0.7, 0.3))
+    val Array(trainingData, testData) = testSet.randomSplit(Array(0.5, 0.5))
 
     // Train a DecisionTree model.
     val dt = new DecisionTreeRegressor()
@@ -100,6 +101,28 @@ object NBA_DT_ML_Reg_Variance
     accuracy.describe().show()
 
     //accuracy.show()
+
+
+
+    //PLOTLY
+    //------------------------------------------------------------------------------------------------------------------
+
+    val xs = 0 until 300
+
+
+    implicit val y1: Array[Double] = residuals.select($"label").rdd.map(_(0).toString.toDouble).collect()
+    implicit val y2: Array[Double] = residuals.select($"prediction").rdd.map(_(0).toString.toDouble).collect()
+
+    // Options common to traces
+    val commonOptions = ScatterOptions().mode(ScatterMode.Marker).marker(MarkerOptions().size(8).lineWidth(1))
+
+    // The plot itself
+    val plot = Plot()
+      .withScatter(xs, y1, commonOptions.name("Label"))
+      .withScatter(xs, y2, commonOptions.name("Prediction"))
+
+
+    draw(plot, "NBA_DT_ML", writer.FileOptions(overwrite=true))
 
   }
 

@@ -170,6 +170,8 @@ object MediaAnalysisKMeansPipeline
         .setPredictionCol("cluster").setFeaturesCol("features")
     }
 
+
+
     val numericFrame = indexedFrame.filter(_ != "sumAmountByOrg").filter(_ != "sumOrgTotal")
     numericFrame.describe().show()
 
@@ -211,10 +213,12 @@ object MediaAnalysisKMeansPipeline
 
     //PLOTLY          ELBOW PLOT for getting best k
     //------------------------------------------------------------------------------------------------------------------
-    /*
+
 
     // best k seems to be 6 -> plotly elbow plot
-    val kList = (2 to 16 by 2 ).map(k => computeCost(numericFrame, k))
+    val kList = (2 to 16 by 2).map(k => computeCost(numericFrame, k))
+    //kList foreach println
+
 
     implicit val x: Array[Double] = (2.asInstanceOf[Double] to 16 by 2).toArray
     implicit val y: Array[Double] = kList.toArray
@@ -225,9 +229,8 @@ object MediaAnalysisKMeansPipeline
     // The plot itself
     val plot = Plot().withScatter(x, y, commonOptions.name("K"))
 
-    draw(plot, "MT_KMeans", writer.FileOptions(overwrite=true))
+    draw(plot, "MT_KMeans_ElbowBy2", writer.FileOptions(overwrite=true))
 
-    */
     //------------------------------------------------------------------------------------------------------------------
 
 
