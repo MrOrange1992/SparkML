@@ -14,8 +14,9 @@ object FD_LogReg_ML
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
 
-    //instance for mapper class for sparkSession
     val dataFrameMapper: FlightDataMapper = new FlightDataMapper
+
+    import dataFrameMapper.sparkSession.implicits._
 
     val mapperFrame = dataFrameMapper.mappedFrameNoCancelled
 
@@ -71,40 +72,38 @@ object FD_LogReg_ML
       )
 
 
+    val featureArray = Array(
+      //"YEAR",
+      //"QUARTER",
+      //"MONTH",
+      "DAY_OF_MONTH",
+      "DAY_OF_WEEK",
+      "AIRLINE_ID",
+      "ORIGIN_AIRPORT_ID",
+      "DEST_AIRPORT_ID",
+      "CRS_DEP_TIME",
+      "DISTANCE_GROUP",
+      "PRCP",
+      "SNOW",
+      "SNWD",
+      "TAVG",
+      "TMAX",
+      "TMIN",
+      "WESF",
+      "WT01",
+      "WT02",
+      "WT03",
+      "WT04",
+      "WT05",
+      "WT06",
+      "WT07",
+      "WT08",
+      "WT11"
+    )
 
 
     //setting up features
-    val assembler = new VectorAssembler()
-      .setInputCols(Array(
-        //"YEAR",
-        //"QUARTER",
-        //"MONTH",
-        "DAY_OF_MONTH",
-        "DAY_OF_WEEK",
-        "AIRLINE_ID",
-        "ORIGIN_AIRPORT_ID",
-        "DEST_AIRPORT_ID",
-        "CRS_DEP_TIME",
-        "DISTANCE_GROUP",
-        "PRCP",
-        "SNOW",
-        "SNWD",
-        "TAVG",
-        "TMAX",
-        "TMIN",
-        "WESF",
-        "WT01",
-        "WT02",
-        "WT03",
-        "WT04",
-        "WT05",
-        "WT06",
-        "WT07",
-        "WT08",
-        "WT11"
-      )).setOutputCol("features")
-
-
+    val assembler = new VectorAssembler().setInputCols(featureArray).setOutputCol("features")
 
 
 
@@ -116,7 +115,7 @@ object FD_LogReg_ML
     val trainingData = splitData(0)
     val testData = splitData(1)
 
-    trainingData.show()
+    //trainingData.show()
 
     //Linear Regression model
     val lr = new LogisticRegression()
@@ -127,7 +126,22 @@ object FD_LogReg_ML
 
     //summary / evaluation of trained model
     //--------------------------------------------------
-    println(s"Coefficients: ${lrModel.coefficients} \nIntercept: ${lrModel.intercept}")
+    //summary / evaluation of trained model
+    //--------------------------------------------------
+    println(s"Coefficients:")
+
+
+    val featureCoefficientMap = (featureArray zip lrModel.coefficients.toArray).map(entry => entry._1 -> entry._2).toMap
+
+
+    val coefficientFrame = featureCoefficientMap.toSeq.toDF("name", "value").orderBy($"value".desc)
+
+
+    coefficientFrame.show(false)
+
+
+    //lrModel.coefficients.toArray.foreach(number => printf("%f\n", number))
+    println(s"Intercept: ${lrModel.intercept}")
 
     val trainingSummary = lrModel.summary
 
@@ -136,23 +150,32 @@ object FD_LogReg_ML
 
     //trainingSummary.residuals.show()
 
-    //println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
-    //println(s"MSE: ${trainingSummary.meanSquaredError}")
-    //println(s"r2: ${trainingSummary.r2}\n")
     //--------------------------------------------------
 
 
     //test the model
     val predictions = lrModel.transform(testData)
-    predictions.filter(predictions("label") === 1f).show()
+    //predictions.filter(predictions("label") === 1f).show()
 
     //show residuals
-    //predictions.select(($"label" - $"prediction").as("residuals")).show()
+    predictions.select($"label", $"prediction").describe().show()
+
+
+    val allCount = predictions.count()
+    val allLate = predictions.filter($"label" === 1).count()
+    val correctPredictions = predictions.filter($"label" === $"prediction").count()
+    val percentage = (correctPredictions / allCount) * 100
+
+    println(s"Total flights: $allCount")
+    println(s"Correct Predictions: $correctPredictions")
+    println(s"Percentage: $percentage")
+
 
     //calculate accuracy of predictions
-    val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
-    val accuracy = evaluator.evaluate(predictions)
-    println(s"Accuracy: $accuracy")
+    //val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
+    //val accuracy = evaluator.evaluate(predictions)
+    //println(s"Accuracy: $accuracy")
+
 
 
 

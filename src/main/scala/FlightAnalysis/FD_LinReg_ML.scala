@@ -11,8 +11,6 @@ import co.theasi.plotly.{Plot, writer}
 import co.theasi.plotly._
 
 
-
-
 object FD_LinReg_ML
 {
   def main(args: Array[String]): Unit =
@@ -20,64 +18,97 @@ object FD_LinReg_ML
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
 
-
-    //instance for mapper class for sparkSession
     val dataFrameMapper: FlightDataMapper = new FlightDataMapper
 
     import dataFrameMapper.sparkSession.implicits._
 
-    val dataFrame = dataFrameMapper.mappedFrameNoCancelled
+    val mapperFrame = dataFrameMapper.mappedFrameNoCancelled
 
-    val expandedFrame = dataFrame//.withColumn("SUM_DELAY", dataFrame("DEP_DELAY") + dataFrame("ARR_DELAY"))
+    val newFrame = mapperFrame.filter(mapperFrame("ORIGIN_STATE_ABR") === "CA")
 
-    //dataFrame.show()
+    val renamedFrame = newFrame.withColumnRenamed("FL_DATE", "DATE")
 
-    def num2bolNum: (Float => Double) = v => { if (v > 20) 1.0 else 0.0 }
+
+    val weatherFrame = dataFrameMapper.weatherFrame
+
+    val joinedFrame = renamedFrame.join(weatherFrame, "DATE")
+
+
+    def num2bolNum: (Float => Int) = v => { if (v > 35) 1 else 0 }
 
     val bool2int_udf = udf(num2bolNum)
 
-    val convertLabel = expandedFrame
-      .withColumn("label", bool2int_udf(dataFrame("DEP_DELAY")))
+    val dataFrame = joinedFrame.withColumn("IS_DELAYED", bool2int_udf(joinedFrame("DEP_DELAY"))).na.fill(0)
 
-    //convertLabel.describe().show()
+    //dataFrame.rdd.map(row => row.map)
+
 
     //points per game as label
-    val lrData = convertLabel
+    val lrData = dataFrame
       .select(
-        convertLabel("label"),
+        dataFrame("IS_DELAYED").as("label"),
         //expandedFrame("YEAR"),
         //expandedFrame("QUARTER"),
         //expandedFrame("MONTH"),
-        convertLabel("DAY_OF_MONTH"),
-        convertLabel("DAY_OF_WEEK"),
-        convertLabel("AIRLINE_ID"),
-        convertLabel("ORIGIN_AIRPORT_ID"),
-        convertLabel("DEST_AIRPORT_ID"),
-        convertLabel("CRS_DEP_TIME"),
-        convertLabel("DEP_DELAY_NEW"),
-        convertLabel("CRS_ARR_TIME"),
-        convertLabel("DISTANCE_GROUP"))
+        dataFrame("DAY_OF_MONTH"),
+        dataFrame("DAY_OF_WEEK"),
+        dataFrame("AIRLINE_ID"),
+        dataFrame("ORIGIN_AIRPORT_ID"),
+        dataFrame("DEST_AIRPORT_ID"),
+        dataFrame("CRS_DEP_TIME"),
+        dataFrame("DISTANCE_GROUP"),
+        dataFrame("PRCP"),
+        dataFrame("SNOW"),
+        dataFrame("SNWD"),
+        dataFrame("TAVG"),
+        dataFrame("TMAX"),
+        dataFrame("TMIN"),
+        dataFrame("WESF"),
+        dataFrame("WT01"),
+        dataFrame("WT02"),
+        dataFrame("WT03"),
+        dataFrame("WT04"),
+        dataFrame("WT05"),
+        dataFrame("WT06"),
+        dataFrame("WT07"),
+        dataFrame("WT08"),
+        dataFrame("WT11")
+      )
 
-    //lrData.groupBy(lrData("DEST_AIRPORT_ID")).count().describe().show()
 
-    //lrData.describe().show()
+    val featureArray = Array(
+      //"YEAR",
+      //"QUARTER",
+      //"MONTH",
+      "DAY_OF_MONTH",
+      "DAY_OF_WEEK",
+      "AIRLINE_ID",
+      "ORIGIN_AIRPORT_ID",
+      "DEST_AIRPORT_ID",
+      "CRS_DEP_TIME",
+      "DISTANCE_GROUP",
+      "PRCP",
+      "SNOW",
+      "SNWD",
+      "TAVG",
+      "TMAX",
+      "TMIN",
+      "WESF",
+      "WT01",
+      "WT02",
+      "WT03",
+      "WT04",
+      "WT05",
+      "WT06",
+      "WT07",
+      "WT08",
+      "WT11"
+    )
+
 
     //setting up features
-    val assembler = new VectorAssembler()
-      .setInputCols(Array(
-        //"YEAR",
-        //"QUARTER",
-        //"MONTH",
-        "DAY_OF_MONTH",
-        "DAY_OF_WEEK",
-        "AIRLINE_ID",
-        "ORIGIN_AIRPORT_ID",
-        "DEST_AIRPORT_ID",
-        "CRS_DEP_TIME",
-        "DEP_DELAY_NEW",
-        "CRS_ARR_TIME",
-        "DISTANCE_GROUP"
-      )).setOutputCol("features")
+    val assembler = new VectorAssembler().setInputCols(featureArray).setOutputCol("features")
+
 
 
 
@@ -90,7 +121,7 @@ object FD_LinReg_ML
     val trainingData = splitData(0)
     val testData = splitData(1)
 
-    trainingData.show()
+    //trainingData.show()
 
     //Linear Regression model
     val lr = new LinearRegression()
@@ -101,7 +132,20 @@ object FD_LinReg_ML
 
     //summary / evaluation of trained model
     //--------------------------------------------------
-    println(s"Coefficients: ${lrModel.coefficients} \nIntercept: ${lrModel.intercept}")
+    println(s"Coefficients:")
+
+
+    val featureCoefficientMap = (featureArray zip lrModel.coefficients.toArray).map(entry => entry._1 -> entry._2).toMap
+
+
+    val coefficientFrame = featureCoefficientMap.toSeq.toDF("name", "value").orderBy($"value".desc)
+
+
+    coefficientFrame.show(false)
+
+
+    //lrModel.coefficients.toArray.foreach(number => printf("%f\n", number))
+    println(s"Intercept: ${lrModel.intercept}")
 
     val trainingSummary = lrModel.summary
 
@@ -123,10 +167,20 @@ object FD_LinReg_ML
     //show residuals
     predictions.select($"label", $"prediction").describe().show()
 
+
+    val allCount = predictions.count()
+    val allLate = predictions.filter($"label" === 1).count()
+    val correctPredictions = predictions.filter($"label" === 1).filter($"prediction" >= 0.5).count()
+
+    println(s"Late flights: $allLate")
+    println(s"Predictions over 50%: $correctPredictions")
+    println(s"Late flights: $allLate")
+
+
     //calculate accuracy of predictions
-    val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
-    val accuracy = evaluator.evaluate(predictions)
-    println(s"Accuracy: $accuracy")
+    //val evaluator = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("prediction").setMetricName("areaUnderROC")
+    //val accuracy = evaluator.evaluate(predictions)
+    //println(s"Accuracy: $accuracy")
 
     //------------------------------------------------------------------------------------------------------------------
 
