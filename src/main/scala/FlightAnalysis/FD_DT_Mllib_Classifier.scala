@@ -63,8 +63,7 @@ object FD_DT_Mllib_Classifier
     )
 
 
-    //TODO: delay > 30min/40min
-    def num2bolNum: (Float => Int) = v => if (v > 20) 1 else 0
+    def num2bolNum: (Float => Int) = v => if (v > 35) 1 else 0
 
     val bool2int_udf = udf(num2bolNum)
 
@@ -125,13 +124,13 @@ object FD_DT_Mllib_Classifier
     import dataFrameMapper.sparkSession.implicits._
 
     //get predictions from testData
-val labelAndPreds = testData.map(entry => (entry.label, model.predict(entry.features))).toDF()
-val correctCount = labelAndPreds.select("*").where("_1 = _2").count()
-val percentage: Float = correctCount.asInstanceOf[Float] / testData.count() * 100
+    val labelAndPreds = testData.map(entry => (entry.label, model.predict(entry.features))).toDF()
+    val correctCount = labelAndPreds.select("*").where("_1 = _2").count()
+    val percentage: Float = correctCount.asInstanceOf[Float] / testData.count() * 100
 
-println(s"\nTotal: ${testData.count()}")
-println(s"Correct predictions: $correctCount")
-println(s"Percentage: $percentage")
+    println(s"\nTotal: ${testData.count()}")
+    println(s"Correct predictions: $correctCount")
+    println(s"Percentage: $percentage")
 
     //string representation of created decision tree model
     println("\nLearned classification tree model:\n" + model.toDebugString)

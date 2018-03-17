@@ -66,7 +66,7 @@ object NBA_DT_ML_Reg_Variance
 
 
     // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = testSet.randomSplit(Array(0.7, 0.3))
+    val Array(trainingData, testData) = testSet.randomSplit(Array(0.5, 0.5))
 
     // Train a DecisionTree model.
     val dt = new DecisionTreeRegressor()

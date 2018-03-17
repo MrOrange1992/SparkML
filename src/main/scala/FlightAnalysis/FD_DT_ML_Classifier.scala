@@ -45,7 +45,7 @@ object FD_DT_ML_Classifier
     )
 
     //TODO: delay > 30min/40min
-    def num2bolNum: (Float => Double) = v => { if (v > 20) 1.0 else 0.0 }
+    def num2bolNum: (Float => Double) = v => { if (v > 35) 1.0 else 0.0 }
 
     val bool2int_udf = udf(num2bolNum)
 

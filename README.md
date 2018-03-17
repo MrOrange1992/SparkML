@@ -43,4 +43,4 @@ The weather data was obtained from the National Centers for Environmental Inform
 https://www.ncdc.noaa.gov/cdo-web/search
 
 ## Results
-The results and outputs of the implementations can be found as corresponding .txt files in ./results.
+The results and outputs of the implementations can be found as markdown files in ./results.

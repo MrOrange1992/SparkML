@@ -20,14 +20,13 @@ object FD_LogReg_ML
 
     val mapperFrame = dataFrameMapper.mappedFrameNoCancelled
 
-    val newFrame = mapperFrame.filter(mapperFrame("ORIGIN_STATE_ABR") === "CA")
+    val mappedFrame = mapperFrame.filter(mapperFrame("ORIGIN_STATE_ABR") === "CA")
 
-    val renamedFrame = newFrame.withColumnRenamed("FL_DATE", "DATE")
-
+    val flighFrame = mappedFrame.withColumnRenamed("FL_DATE", "DATE")
 
     val weatherFrame = dataFrameMapper.weatherFrame
 
-    val joinedFrame = renamedFrame.join(weatherFrame, "DATE")
+    val joinedFrame = flighFrame.join(weatherFrame, "DATE")
 
 
     def num2bolNum: (Float => Int) = v => { if (v > 35) 1 else 0 }
@@ -133,7 +132,6 @@ object FD_LogReg_ML
 
     val featureCoefficientMap = (featureArray zip lrModel.coefficients.toArray).map(entry => entry._1 -> entry._2).toMap
 
-
     val coefficientFrame = featureCoefficientMap.toSeq.toDF("name", "value").orderBy($"value".desc)
 
 
@@ -151,15 +149,11 @@ object FD_LogReg_ML
     //trainingSummary.residuals.show()
 
     //--------------------------------------------------
-
-
     //test the model
     val predictions = lrModel.transform(testData)
-    //predictions.filter(predictions("label") === 1f).show()
 
     //show residuals
     predictions.select($"label", $"prediction").describe().show()
-
 
     val allCount = predictions.count()
     val allLate = predictions.filter($"label" === 1).count()

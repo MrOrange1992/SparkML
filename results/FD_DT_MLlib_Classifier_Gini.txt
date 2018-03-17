@@ -19,28 +19,10 @@ val model = DecisionTree.trainClassifier(trainingData, numClasses, categoricalFe
 
 
 
-Features:
-    "MONTH",
-    "DAY_OF_MONTH",
-    "DAY_OF_WEEK",
-    "AIRLINE_ID",
-    "ORIGIN_AIRPORT_ID",
-    "DEST_AIRPORT_ID",
-    "CRS_DEP_TIME",
-    "DISTANCE_GROUP",
-    "PRCP",
-    "SNOW",
-    "SNWD",
-    "TAVG",
-    "TMAX",
-    "TMIN",
-    "WESF"
 
-
-Total: 101289826
-Zero count: 79984843
-Correct predictions: 80063575
-Percentage: 79.044044
+Total: 			162075624
+Correct predictions: 	131063575
+Percentage: 		80.865692
 
 Learned classification tree model:
 DecisionTreeModel classifier of depth 5 with 63 nodes
