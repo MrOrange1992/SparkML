@@ -2,7 +2,7 @@
 
 ## Medientransparenz Data
 
-**Data Source**: https://www.medien-transparenz.a
+**Data Source**: https://www.medien-transparenz.at
 
 **Objective**: Analyse/Find political relations regarding payments of organisations to media
 
