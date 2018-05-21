@@ -63,7 +63,7 @@ object FD_DT_Mllib_Classifier
     )
 
 
-    def num2bolNum: (Float => Int) = v => if (v > 35) 1 else 0
+    def num2bolNum: (Float => Double) = v => if (v > 35) 1.0 else 0.0
 
     val bool2int_udf = udf(num2bolNum)
 
@@ -121,7 +121,10 @@ object FD_DT_Mllib_Classifier
     val model = DecisionTree.trainClassifier(trainingData, numClasses, categoricalFeaturesInfo,
       impurity, maxDepth, maxBins)
 
+
+
     import dataFrameMapper.sparkSession.implicits._
+
 
     //get predictions from testData
     val labelAndPreds = testData.map(entry => (entry.label, model.predict(entry.features))).toDF()

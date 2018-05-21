@@ -24,12 +24,12 @@ object FD_LogReg_ML
 
     val flighFrame = mappedFrame.withColumnRenamed("FL_DATE", "DATE")
 
-    val weatherFrame = dataFrameMapper.weatherFrame
+    val weatherFrame = dataFrameMapper.weatherFrame.filter($"name".contains("AIR"))
 
     val joinedFrame = flighFrame.join(weatherFrame, "DATE")
 
 
-    def num2bolNum: (Float => Int) = v => { if (v > 35) 1 else 0 }
+    def num2bolNum: (Float => Int) = v => { if (v > 10) 1 else 0 }
 
     val bool2int_udf = udf(num2bolNum)
 
@@ -72,15 +72,9 @@ object FD_LogReg_ML
 
 
     val featureArray = Array(
-      //"YEAR",
-      //"QUARTER",
-      //"MONTH",
-      "DAY_OF_MONTH",
-      "DAY_OF_WEEK",
       "AIRLINE_ID",
       "ORIGIN_AIRPORT_ID",
       "DEST_AIRPORT_ID",
-      "CRS_DEP_TIME",
       "DISTANCE_GROUP",
       "PRCP",
       "SNOW",
@@ -110,7 +104,7 @@ object FD_LogReg_ML
     val dataLR = assembler.transform(lrData).select("label", "features")
 
     //splitting data into training data and test data
-    val splitData = dataLR.randomSplit(Array(0.2, 0.8))
+    val splitData = dataLR.randomSplit(Array(0.3, 0.7))
     val trainingData = splitData(0)
     val testData = splitData(1)
 
@@ -127,7 +121,7 @@ object FD_LogReg_ML
     //--------------------------------------------------
     //summary / evaluation of trained model
     //--------------------------------------------------
-    println(s"Coefficients:")
+    println(s"Feature importances:")
 
 
     val featureCoefficientMap = (featureArray zip lrModel.coefficients.toArray).map(entry => entry._1 -> entry._2).toMap
@@ -158,7 +152,7 @@ object FD_LogReg_ML
     val allCount = predictions.count()
     val allLate = predictions.filter($"label" === 1).count()
     val correctPredictions = predictions.filter($"label" === $"prediction").count()
-    val percentage = (correctPredictions / allCount) * 100
+    val percentage = (correctPredictions.asInstanceOf[Float] / allCount) * 100
 
     println(s"Total flights: $allCount")
     println(s"Correct Predictions: $correctPredictions")

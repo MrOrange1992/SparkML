@@ -44,7 +44,7 @@ class FlightDataMapper
     .option("header", "true")
     .option("delimiter", ",")
     .option("escape", "\"")
-    .load("./dataFiles/FlightData17_01-02-03.csv")
+    .load("./dataFiles/FD_2017.csv")
 
   def timeToHours: (Int => Int) = p => p / 100
   val toHoursUDF = udf(timeToHours)
@@ -56,10 +56,16 @@ class FlightDataMapper
 
   val mappedFrameNoCancelled: sql.DataFrame = mappedFrame.filter(mappedFrame("CANCELLED") === 0f)
 
+
   /*
 
   "STATION","NAME","DATE","PRCP","SNOW","SNWD","TAVG","TMAX","TMIN","WESF","WT01","WT02","WT03","WT04","WT05","WT06","WT07","WT08","WT11"
   "USR0000CTHO","THOMES CREEK CALIFORNIA CA US","2017-01-01",0,0,0,"5.1","10.0","1.1",0,0,0,0,0,0,0,0,0,
+
+  STATION,    NAME,                         DATE,         AWND, PRCP, SNOW, SNWD, TAVG,   TMAX, TMIN, WESF, WT01,WT02,WT03,WT04,WT05,WT06,WT07,WT08,WT10,WT11
+
+  USR0000CTHO,THOMES CREEK CALIFORNIA CA US,2017-01-01,   0,    0,    0,    0,    41,     50,   34,    0,    0,    0,  0,   0,    0,  0,    0,   0,  0,   0
+
 
    */
 
@@ -69,6 +75,7 @@ class FlightDataMapper
       StructField("STATION", StringType, true),
       StructField("NAME", StringType, true),
       StructField("DATE", StringType, true),
+      StructField("AWND", FloatType, true),
       StructField("PRCP", FloatType, true),
       StructField("SNOW", FloatType, true),
       StructField("SNWD", FloatType, true),
@@ -84,6 +91,7 @@ class FlightDataMapper
       StructField("WT06", IntegerType, true),
       StructField("WT07", IntegerType, true),
       StructField("WT08", IntegerType, true),
+      StructField("WT10", IntegerType, true),
       StructField("WT11", IntegerType, true)
     )
   )
@@ -94,6 +102,6 @@ class FlightDataMapper
     .option("header", "true")
     .option("delimiter", ",")
     .option("escape", "\"")
-    .load("./dataFiles/WeatherData.csv")
+    .load("./dataFiles/WData_2017.csv")
 
   }

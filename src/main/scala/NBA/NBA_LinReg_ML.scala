@@ -25,20 +25,28 @@ object NBA_LinReg_ML
     val spark = SparkSession.builder.appName("NBA_LinReg_ML").master("local[*]").getOrCreate()
 
     /*
-      Currently Available (Nov 2017)
-        2015-2016-regular
-        2016-playoff
-        2016-2017-regular
-        2017-playoff
-     */
+        Currently Available (Nov 2017)
+          2015-2016-regular
+          2016-playoff
+          2016-2017-regular
+          2017-playoff
+          2017-2018-regular
+          2018-playoff
+       */
     val apiWrapper = new WrapperMySportsAPI
-    val s2016PlayerStats = apiWrapper.getPlayerStatsOfSeason("2016-2017-regular")
+
+    val cumulativePlayerStats = new CumulativePlayerStats
+
+    val seasonName: String = "2016-2017-regular"
+
+
+    val s2016PlayerStats = apiWrapper.getHttpRequest(seasonName + cumulativePlayerStats.cumulativeString + cumulativePlayerStats.playerStatsRequest)
 
     // Convert http-request-stream List[String] to a DataSet
     import spark.implicits._
     val lines = spark.sparkContext.parallelize(s2016PlayerStats.tail)   //tail because first line is csv header
 
-    val players = lines.flatMap(apiWrapper.mappPlayerStats).toDS().cache()
+    val players = lines.flatMap(cumulativePlayerStats.mappPlayerStats).toDS().cache()
     //players.show()
 
     // summary of points per game of dataset
@@ -91,13 +99,13 @@ object NBA_LinReg_ML
 
     //setting up features
     val assembler = new VectorAssembler().setInputCols(Array(
-      //"position",
-      //"height",
-      //"weight",
+      "position",
+      "height",
+      "weight",
       "gamesPlayed",
       "minSecPG",
-      "fgPct"
-      //"ftPct"
+      "fgPct",
+      "ftPct"
     )).setOutputCol("features")
 
     //mapped dataset for Linear Regression
@@ -133,7 +141,7 @@ object NBA_LinReg_ML
     import spark.implicits._
 
     //show residuals
-    predictions.withColumn("AvgError", functions.abs($"label" - $"prediction")).drop("features").describe().show()
+    predictions.withColumn("error", functions.abs($"label" - $"prediction")).drop("features").describe().show()
 
 
 
@@ -149,8 +157,8 @@ object NBA_LinReg_ML
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
-    /*
-    val plotData = predictions.sort("label")
+
+    val plotData = predictions.sort("prediction")
 
     plotData.describe().show()
 
@@ -173,8 +181,8 @@ object NBA_LinReg_ML
 
 
 
-    draw(plot, "NBA_LR_16-17_50-50_All", writer.FileOptions(overwrite=true))
-    */
+    draw(plot, "LR_PredictingPointsPerGame", writer.FileOptions(overwrite=true))
+
 
 
     //------------------------------------------------------------------------------------------------------------------

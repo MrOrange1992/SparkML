@@ -15,8 +15,7 @@ object NBA_DT_ML_Reg_Variance
 {
 
 
-  def main(args: Array[String]): Unit =
-  {
+  def main(args: Array[String]): Unit = {
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
     // Use new SparkSession interface in Spark 2.0
@@ -28,15 +27,22 @@ object NBA_DT_ML_Reg_Variance
           2016-playoff
           2016-2017-regular
           2017-playoff
+          2017-2018-regular
+          2018-playoff
        */
     val apiWrapper = new WrapperMySportsAPI
-    val s2016PlayerStats = apiWrapper.getPlayerStatsOfSeason("2016-2017-regular")
+
+    val cumulativePlayerStats = new CumulativePlayerStats
+
+    val seasonName: String = "2016-2017-regular"
+
+    val s2016PlayerStats = apiWrapper.getHttpRequest(seasonName + cumulativePlayerStats.cumulativeString + cumulativePlayerStats.playerStatsRequest)
 
     // Convert http-request-stream List[String] to a DataSet
     import spark.implicits._
     val lines = spark.sparkContext.parallelize(s2016PlayerStats.tail) //tail because first line is csv header
 
-    val players = lines.flatMap(apiWrapper.mappPlayerStats).toDS()
+    val players = lines.flatMap(cumulativePlayerStats.mappPlayerStats).toDS()
       .select(
         "pointsPG",
         "weight",
@@ -48,42 +54,48 @@ object NBA_DT_ML_Reg_Variance
         "gamesPlayed"
       )
 
+    val featureArray = Array(
+      "weight",
+      "height",
+      "position",
+      "fgPct",
+      "ftPct",
+      "minSecPG",
+      "gamesPlayed"
+    )
+
     //players.show()
 
-    val testSet = players.withColumn("label", players("pointsPG"))
+    val playerFrame = players.withColumn("label", players("pointsPG"))
 
-    val vectorAssembler = new VectorAssembler()
-      .setInputCols(Array(
-        //"weight",
-        //"height",
-        //"position",
-        "fgPct",
-        //"ftPct",
-        "minSecPG",
-        "gamesPlayed"
-      ))
+    val featureVector = new VectorAssembler()
+      .setInputCols(featureArray)
       .setOutputCol("features")
 
+    val dtDataFrame = featureVector.transform(playerFrame).select("label", "features")
 
-    // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = testSet.randomSplit(Array(0.5, 0.5))
+    // Split the data into training and test sets
+    val Array(trainingData, testData) = dtDataFrame.randomSplit(Array(0.5, 0.5))
 
-    // Train a DecisionTree model.
+    // train the model
     val dt = new DecisionTreeRegressor()
       .setLabelCol("label")
       .setFeaturesCol("features")
-      .setMaxDepth(6)
+      .setMaxDepth(3)
       .setMaxBins(100)
 
-    // Chain indexer and tree in a Pipeline.
-    val pipeline = new Pipeline()
-      .setStages(Array(vectorAssembler, dt))
+    val model = dt.fit(trainingData)
 
-    // Train model. This also runs the indexer.
-    val model = pipeline.fit(trainingData)
+    //compare feature importances
+    val featureImportances = model.featureImportances
+    val featureCoefficientMap = (featureArray zip featureImportances.toArray).map(entry => entry._1 -> entry._2).toMap
+    val coefficientFrame = featureCoefficientMap.toSeq.toDF("name", "value").orderBy($"value".desc)
 
-    val treeModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
-    println("Learned classification tree model:\n" + treeModel.toDebugString)
+    println("Feature Importances:")
+    coefficientFrame.show()
+
+    //print model structure
+    println("Tree structure:\n" + model.toDebugString)
 
     // Make predictions.
     val predictions = model.transform(testData)
@@ -93,26 +105,26 @@ object NBA_DT_ML_Reg_Variance
 
     residuals.describe().show()
 
-    residuals.show()
+    //residuals.show()
 
 
-    val accuracy = residuals.withColumn("acurracy", functions.abs(residuals("label") - residuals("prediction")))
+    val accuracy = residuals.withColumn("error", functions.abs(residuals("label") - residuals("prediction")))
 
     accuracy.describe().show()
 
     //accuracy.show()
 
 
-
     //PLOTLY
     //------------------------------------------------------------------------------------------------------------------
 
-    /*
+    val plotData = residuals.sort("prediction")
+
     val xs = 0 until 300
 
 
-    implicit val y1: Array[Double] = residuals.select($"label").rdd.map(_(0).toString.toDouble).collect()
-    implicit val y2: Array[Double] = residuals.select($"prediction").rdd.map(_(0).toString.toDouble).collect()
+    implicit val y1: Array[Double] = plotData.select($"label").rdd.map(_ (0).toString.toDouble).collect()
+    implicit val y2: Array[Double] = plotData.select($"prediction").rdd.map(_ (0).toString.toDouble).collect()
 
     // Options common to traces
     val commonOptions = ScatterOptions().mode(ScatterMode.Marker).marker(MarkerOptions().size(8).lineWidth(1))
@@ -123,9 +135,9 @@ object NBA_DT_ML_Reg_Variance
       .withScatter(xs, y2, commonOptions.name("Prediction"))
 
 
-    draw(plot, "NBA_DT_ML", writer.FileOptions(overwrite=true))
+    draw(plot, "PointsPerGameSortedByPrediction", writer.FileOptions(overwrite = true))
 
-    */
+
   }
 
 }

@@ -23,21 +23,30 @@ object NBA_DT_Mllib_Reg_Variance
     val spark = SparkSession.builder.appName("NBA_DecisionTree").master("local[*]").getOrCreate()
 
     /*
-      Currently Available (Nov 2017)
-        2015-2016-regular
-        2016-playoff
-        2016-2017-regular
-        2017-playoff
-     */
+        Currently Available (Nov 2017)
+          2015-2016-regular
+          2016-playoff
+          2016-2017-regular
+          2017-playoff
+          2017-2018-regular
+          2018-playoff
+       */
     val apiWrapper = new WrapperMySportsAPI
-    val s2016PlayerStats = apiWrapper.getPlayerStatsOfSeason("2016-2017-regular")
+
+    val cumulativePlayerStats = new CumulativePlayerStats
+
+    val seasonName: String = "2016-2017-regular"
+
+
+    val s2016PlayerStats = apiWrapper.getHttpRequest(seasonName + cumulativePlayerStats.cumulativeString + cumulativePlayerStats.playerStatsRequest)
 
     // Convert http-request-stream List[String] to a DataSet
     import spark.implicits._
     val lines = spark.sparkContext.parallelize(s2016PlayerStats.tail)   //tail because first line is csv header
 
-    val players = lines.flatMap(apiWrapper.mappPlayerStats)
+    val players = lines.flatMap(cumulativePlayerStats.mappPlayerStats)
 
+    print(players.count())
 
     val dtData = players.map(player => LabeledPoint(
       player.pointsPG, // Get target value
@@ -57,7 +66,7 @@ object NBA_DT_Mllib_Reg_Variance
     val (trainingData, testData) = (splits(0), splits(1))
     val categoricalFeaturesInfo = Map[Int, Int]()
     val impurity = "variance"
-    val maxDepth = 6
+    val maxDepth = 3
     val maxBins = 100
 
     val model = DecisionTree.trainRegressor(
@@ -65,6 +74,8 @@ object NBA_DT_Mllib_Reg_Variance
       categoricalFeaturesInfo,
       impurity, maxDepth, maxBins
     )
+
+
 
 
     // Evaluate model on test instances and compute test error
